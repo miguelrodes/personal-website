@@ -4,6 +4,7 @@ export type Visual = {
   label: string;
   caption: string;
   aspectRatio?: string;
+  objectPosition?: string;
 };
 
 export type SectionId = "intro" | "problem" | "context" | "process" | "outcome";
@@ -44,26 +45,29 @@ export const profile = {
   email: "miguelrodes24@gmail.com",
   linkedin: "https://www.linkedin.com/in/miguel-rodes/",
   github: "https://github.com/miguelrodes",
-  availability: "January–June 2027",
-  academicStatement:
-    "Computer Science & Philosophy Major, Minor in Economics | Northeastern University, Boston | Aspiring to Work in Frontier Technologies (AI & Web3).",
-  bio: "I design and build software for investor reporting, investment analysis, and event management. I’m exploring opportunities in product management, product design, and full-stack development.",
+  availability: "January - June 2027",
+  academicStatement: "B.S. in Computer Science & Philosophy\u2002|\u2002Minor in Economics",
+  educationStatement:
+    "Northeastern University\u2002|\u2002Khoury College of Computer Science\u2002|\u2002Expected May 2028",
+  bio: "I'm particularly interested in the intersection of product management, design, and engineering, combining technical development with user experience. I have experience designing and building software solutions at Aldea Ventures and developing full-stack applications like KUSPACE. I aspire to work in frontier technologies, particularly AI and Web3.",
   resumeUrl: "/miguel-rodes-knuth-resume.pdf",
+  resumeFilename: "Miguel-Rodes-Knuth-Resume.pdf",
   portrait: {
-    src: null,
+    src: "/images/miguel-rodes-knuth-profile.png",
     alt: "Portrait of Miguel Rodés Knuth",
     label: "Portrait",
     caption: "Miguel Rodés Knuth · Boston, MA",
     aspectRatio: "4 / 5",
   } satisfies Visual,
   banner: {
-    enabled: false,
+    enabled: true,
     visual: {
-      src: null,
-      alt: "Shallow profile banner for Miguel Rodés Knuth",
-      label: "Profile banner",
+      src: "/images/coastal-banner.png",
+      alt: "",
+      label: "Coastal landscape",
       caption: "",
-      aspectRatio: "6 / 1",
+      aspectRatio: "4 / 1",
+      objectPosition: "50% 53%",
     } satisfies Visual,
   },
 };
@@ -82,11 +86,11 @@ export const projects: Project[] = [
     summary:
       "An interactive reporting portal for exploring fund performance, comparing quarters, and drilling into 1,000+ underlying companies across 28 funds.",
     preview: {
-      src: null,
-      alt: "Aldea Investor Portal fund overview screenshot placeholder",
+      src: "/images/aldea-investor-portal.png",
+      alt: "Aldea Investor Portal showing a company performance scatter plot and investment details using mock data",
       label: "Fund overview",
-      caption: "Fund performance and the companies behind it.",
-      aspectRatio: "8 / 5",
+      caption: "Investor Portal - Portfolio Explorer",
+      aspectRatio: "2514 / 1660",
     },
     sections: [
       {
@@ -154,7 +158,7 @@ export const projects: Project[] = [
     media: {
       demoUrl: null,
       repositoryUrl: null,
-      loomUrl: null,
+      loomUrl: "https://www.loom.com/share/b9fb0c887144444d9542c403c1392009",
       demoPoster: {
         src: null,
         alt: "Placeholder for the investor portal demo using synthetic sample data",
@@ -184,11 +188,11 @@ export const projects: Project[] = [
     summary:
       "A scenario tool for exploring how investment exits could affect portfolio holdings, investor distributions, and the fund’s projected J-curve.",
     preview: {
-      src: null,
-      alt: "Aldea Investor Simulation projected J-curve screenshot placeholder",
+      src: "/images/aldea-investor-simulation-bottom-trimmed.png",
+      alt: "Aldea Investor Simulation for Tech Fund I, with a fund write-off scenario, performance metrics, and a projected J-curve",
       label: "Projected J-curve",
       caption: "Exploring the projected effects of an investment exit.",
-      aspectRatio: "8 / 5",
+      aspectRatio: "1120 / 766",
     },
     sections: [
       {
@@ -274,11 +278,11 @@ export const projects: Project[] = [
     summary:
       "Data and reliability improvements to Aldea’s investment-intelligence platform, supporting company tracking across 1,200+ companies.",
     preview: {
-      src: null,
-      alt: "Aldea Helios company intelligence view screenshot placeholder",
+      src: "/images/aldea-helios.png",
+      alt: "Aldea Helios company intelligence dashboard showing agent activity and a network of company signals",
       label: "Company intelligence",
       caption: "Company tracking within Aldea’s existing platform.",
-      aspectRatio: "8 / 5",
+      aspectRatio: "1320 / 922",
     },
     sections: [
       {
@@ -371,11 +375,11 @@ export const projects: Project[] = [
     summary:
       "An event-management MVP for organizers and nightclubs, bringing event setup, scheduling, lineups, budgets, guestlists, and ticketing into one product.",
     preview: {
-      src: null,
-      alt: "KUSPACE event management workspace screenshot placeholder",
+      src: "/images/kuspace-portfolio-cropped.png",
+      alt: "KUSPACE logo in white on a black background",
       label: "Event workspace",
       caption: "Event operations in one workspace.",
-      aspectRatio: "8 / 5",
+      aspectRatio: "5 / 3",
     },
     sections: [
       {
