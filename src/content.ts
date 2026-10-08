@@ -13,6 +13,7 @@ export type ProjectSection = {
   id: SectionId;
   title: string;
   text: string;
+  links?: { text: string; href: string }[];
   visual: Visual;
 };
 
@@ -96,7 +97,13 @@ export const projects: Project[] = [
       {
         id: "intro",
         title: "Intro",
-        text: "I designed and built Aldea’s investor-reporting portal as the sole developer, working under Andrew Padilla. It turns quarterly portfolio information into an interactive interface for exploring funds and the companies behind them.",
+        text: "I designed and built Aldea’s investor-reporting portal as the sole developer, reporting directly to Managing Partner Andrew Padilla. It turns quarterly portfolio information into an interactive interface for exploring funds and the companies behind them.",
+        links: [
+          {
+            text: "Andrew Padilla",
+            href: "https://www.linkedin.com/in/andrewpadilla/",
+          },
+        ],
         visual: {
           src: null,
           alt: "Placeholder for an overview of funds in the Aldea Investor Portal",
@@ -289,6 +296,12 @@ export const projects: Project[] = [
         id: "intro",
         title: "Intro",
         text: "I contributed to Helios, Aldea’s existing investment-intelligence platform, working alongside Andrew Padilla. My focus was bug fixing, company-record reconciliation, and data mapping.",
+        links: [
+          {
+            text: "Andrew Padilla",
+            href: "https://www.linkedin.com/in/andrewpadilla/",
+          },
+        ],
         visual: {
           src: null,
           alt: "Placeholder for the company intelligence view in the existing Helios platform",
@@ -313,7 +326,13 @@ export const projects: Project[] = [
       {
         id: "context",
         title: "Context & constraints",
-        text: "Helios supported tracking across 1,200+ companies. I worked within its existing data model and interface, contributing focused improvements alongside Andrew.",
+        text: "Helios supported tracking across 1,200+ companies. I worked within its existing data model and interface, contributing focused improvements alongside Andrew Padilla.",
+        links: [
+          {
+            text: "Andrew Padilla",
+            href: "https://www.linkedin.com/in/andrewpadilla/",
+          },
+        ],
         visual: {
           src: null,
           alt: "Placeholder for company information within the existing Helios interface",

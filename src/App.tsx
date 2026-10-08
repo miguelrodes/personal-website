@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { profile, projects } from "./content";
-import type { Project, Visual } from "./content";
+import type { Project, ProjectSection, Visual } from "./content";
 import "./App.css";
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
@@ -699,6 +699,26 @@ function ProjectMetadata({ project }: { project: Project }) {
   );
 }
 
+function renderSectionText(section: ProjectSection): ReactNode {
+  let remaining = section.text;
+  const parts: ReactNode[] = [];
+
+  section.links?.forEach((link, index) => {
+    const match = remaining.indexOf(link.text);
+    if (match === -1) return;
+    parts.push(remaining.slice(0, match));
+    parts.push(
+      <a key={`${link.text}-${index}`} href={link.href} target="_blank" rel="noopener noreferrer">
+        {link.text}
+      </a>,
+    );
+    remaining = remaining.slice(match + link.text.length);
+  });
+
+  parts.push(remaining);
+  return parts;
+}
+
 function CaseSections({ project, inline = false }: { project: Project; inline?: boolean }) {
   const projectIndex = projects.indexOf(project);
   const pairStart = projectIndex % 2 === 0 ? 2 : 1;
@@ -711,7 +731,7 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
       <div className="case-section-copy">
         <span className="eyebrow section-number">{String(index + 1).padStart(2, "0")}</span>
         <Heading id={`${id}-title`}>{section.title}</Heading>
-        <p>{section.text}</p>
+        <p>{renderSectionText(section)}</p>
       </div>
     );
     const visual = (
