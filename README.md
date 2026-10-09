@@ -43,7 +43,7 @@ The profile uses a white surface and dark-blue text. Aldea work uses burgundy wi
 
 The supplied portrait and coastal banner are in `public/images/` and configured in `src/content.ts`. The banner is enabled behind the name and meets the portrait edge on desktop; CSS crops it horizontally without modifying the original image, using the visual’s editable `objectPosition`. Its empty alternative text marks this background as decorative. The portrait retains descriptive alternative text and a reserved 4:5 ratio.
 
-All four homepage project previews use supplied images in `public/images/`; original assets and cropped variants are retained. Clicking an image opens a larger lightbox. The five section visuals within each case study remain placeholders with `null` paths. Supply real assets through each visual’s `src` field, retaining appropriate alternative text and reserved aspect ratios. The Investor Portal has a supplied Loom walkthrough link. Other missing external media URLs remain `null`; KUSPACE’s preview Demo label is inactive until its URL is supplied. Unavailable media is presented as a static state without a fake launch or play destination. Simulation and Helios have images only, and their unconfirmed technology stacks are omitted.
+All four homepage project previews use supplied images in `public/images/`; original assets and cropped variants are retained. Clicking an image opens a larger lightbox. Case-study visuals with `null` paths remain placeholders. Aldea Investor Portal has supplied images for its Intro and The problem sections; the two static report examples use fictional figures. Its Context, Process, and Outcome visuals remain placeholders, and it has a supplied Loom walkthrough link. KUSPACE’s Demo link opens `https://kuspace.vercel.app/`; its detailed demo and walkthrough posters remain placeholders. Other missing external media URLs remain `null` and are presented without fake launch destinations. Simulation and Helios have supplied project previews, and their unconfirmed technology stacks are omitted.
 
 The supplied résumé is copied unchanged to `public/miguel-rodes-knuth-resume.pdf` and served at `/miguel-rodes-knuth-resume.pdf`.
 
@@ -60,7 +60,7 @@ The four project routes are:
 
 Vite’s development and preview servers provide a single-page-app fallback for direct requests, including the `/contact` page. For the production build, `vite.config.ts` also writes `dist/work/<slug>/index.html` for every project, with its own title and description, plus `dist/404.html`. A future production host must provide an SPA fallback for `/contact` or generate a matching directory index.
 
-When a later deployment is authorized, serve the contents of `dist/` at the domain root with directory-index serving enabled. This lets direct project links and refreshes resolve to their generated HTML files. If the host does not support directory indexes, configure `/work/*` requests to fall back to `/index.html`, and configure the host’s not-found handling for `404.html`. Public deployment is outside this draft and is not configured or authorized.
+No host-specific deployment configuration or deploy script is checked into this repository. For static hosting, serve the contents of `dist/` at the domain root with directory-index serving enabled. This lets direct project links and refreshes resolve to their generated HTML files. If the host does not support directory indexes, configure `/work/*` requests to fall back to `/index.html`, and configure the host’s not-found handling for `404.html`.
 
 ## Assets and URLs still needed
 
@@ -69,10 +69,10 @@ Shared images may be reused between preview and case-study slots. The exact labe
 | Area | Images needed | External URLs needed |
 | --- | --- | --- |
 | Profile | Portrait and banner supplied and integrated; no remaining profile assets | None |
-| Aldea Investor Portal | Preview supplied; five section visuals for fund overview, quarterly comparison, company drill-down, sample reporting output, and portfolio exploration; demo poster; Loom walkthrough poster | Separately hosted synthetic-data demo; Loom walkthrough supplied |
+| Aldea Investor Portal | Preview supplied; Intro overview and two static report visuals for The problem supplied; Context, Process, and Outcome placeholders; demo poster; Loom walkthrough poster | Separately hosted synthetic-data demo; Loom walkthrough supplied |
 | Aldea Investor Simulation | Preview supplied and cropped; five section visuals for exit assumptions, holdings and distributions, scenario assumptions, projected J-curve, and scenario output | None for this draft |
 | Aldea Helios | Preview supplied; five section visuals for company intelligence, company-record relationships, the existing company view, an illustrated platform contribution, and company-record mapping | None; images only |
-| KUSPACE | Preview supplied and cropped; five section visuals for event workspace, scheduling and lineups, budgets and guestlists, ticket checkout, and the event-management MVP; demo poster; walkthrough poster | Product demo; public repository; Loom walkthrough |
+| KUSPACE | Preview supplied and cropped; five section visuals for event workspace, scheduling and lineups, budgets and guestlists, ticket checkout, and the event-management MVP; demo poster; walkthrough poster | Product demo supplied; public repository; Loom walkthrough |
 
 The investor portal application remains a separate project/repository; it is neither merged into this portfolio nor embedded in an iframe. Before any future public demo deployment, inspect its source and verify synthetic-data isolation: no production reads, writes, document exports, fallback services, or secret/service-role credentials in client code. Prefer bundled synthetic fixtures, or an isolated synthetic backend only if necessary, without weakening the real portal’s authentication or access controls.
 

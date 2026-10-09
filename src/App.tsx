@@ -589,7 +589,7 @@ function ProjectPreview({ project }: { project: Project }) {
           <button
             ref={toggleRef}
             type="button"
-            className={`text-link project-link project-toggle${project.media.loomUrl ? " project-link-with-walkthrough" : ""}`}
+            className={`text-link project-link project-toggle${project.media.loomUrl || (project.slug === "kuspace" && project.media.demoUrl) ? " project-link-with-secondary" : ""}`}
             aria-expanded={expanded}
             aria-controls={detailsId}
             onClick={() => changeExpanded(!expanded)}
@@ -597,14 +597,10 @@ function ProjectPreview({ project }: { project: Project }) {
             {expanded ? "Close project" : "View project"} <Arrow />
             <span className="sr-only">: {project.title}</span>
           </button>
-          {project.slug === "kuspace" && (
-            <span
-              className="text-link project-demo-link"
-              aria-disabled="true"
-              title="Demo link will be added later"
-            >
-              Demo <Arrow diagonal />
-            </span>
+          {project.slug === "kuspace" && project.media.demoUrl && (
+            <ExternalLink className="text-link project-demo-link" href={project.media.demoUrl}>
+              Demo
+            </ExternalLink>
           )}
           {project.media.loomUrl && (
             <ExternalLink className="text-link project-walkthrough-link" href={project.media.loomUrl}>
@@ -924,9 +920,22 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
         <p>{renderSectionText(section)}</p>
       </div>
     );
-    const visual = (
+    const visuals = Array.isArray(section.visual) ? section.visual : [section.visual];
+    const hasVisualPair = visuals.length > 1;
+    const visual = hasVisualPair ? (
+      <div className="case-section-visual-pair">
+        {visuals.map((item) => (
+          <MediaFrame
+            key={item.src || item.label}
+            visual={item}
+            number={String(index + 1).padStart(2, "0")}
+            showCorners={false}
+          />
+        ))}
+      </div>
+    ) : (
       <MediaFrame
-        visual={section.visual}
+        visual={visuals[0]}
         number={String(index + 1).padStart(2, "0")}
         showCorners={false}
         mockup={inline ? { project, sectionIndex: index } : undefined}
@@ -936,11 +945,20 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
       <section
         key={section.id}
         id={id}
-        className={`case-section${paired ? " case-section-paired" : ""}`}
+        className={`case-section${paired ? " case-section-paired" : ""}${hasVisualPair ? " case-section-wide-pair" : ""}`}
         aria-labelledby={`${id}-title`}
       >
-        {imageFirst ? visual : copy}
-        {imageFirst ? copy : visual}
+        {hasVisualPair ? (
+          <>
+            {copy}
+            {visual}
+          </>
+        ) : (
+          <>
+            {imageFirst ? visual : copy}
+            {imageFirst ? copy : visual}
+          </>
+        )}
         {section.id === "outcome" && <MediaActions project={project} />}
       </section>
     );

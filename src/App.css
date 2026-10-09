@@ -256,9 +256,8 @@
 .text-link:hover { text-decoration: underline; }
 .text-link:hover svg { transform: translateX(3px); }
 .project-link { margin-top: 12px; }
-.project-link-with-walkthrough, .project-walkthrough-link { min-height: 30px; }
-.project-walkthrough-link { display: flex; }
-.project-demo-link { display: flex; min-height: 30px; cursor: default; }
+.project-link-with-secondary, .project-walkthrough-link, .project-demo-link { min-height: 30px; }
+.project-walkthrough-link, .project-demo-link { display: flex; }
 .project-toggle, .drilldown-close { padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
 .project-toggle[aria-expanded="true"] svg { transform: rotate(-90deg); }
 .project-drilldown {
@@ -341,8 +340,12 @@
 .case-section :is(h2, h5) { margin-bottom: 21px; font-size: clamp(26px, 2.5vw, 35px); line-height: 1.25; letter-spacing: -.035em; }
 .case-section-copy > p { font-size: 17px; line-height: 1.85; }
 .case-section > .media-figure { width: 100%; }
+.case-section-wide-pair { grid-template-columns: minmax(0, 1fr); row-gap: 30px; }
+.case-section-wide-pair .case-section-copy { max-width: none; padding-right: 0; }
 .case-study:not(.case-study-inline) .case-sections { margin-top: 32px; padding-left: 32px; border-left: 1px solid var(--line); }
 .case-image-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; }
+.case-section-visual-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; min-width: 0; }
+.case-section-visual-pair .media-figure { min-width: 0; width: 100%; }
 .case-section-paired { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 28px; }
 .case-section-paired .case-section-copy { padding-right: 0; }
 .media-actions { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 68px; margin-top: 50px; padding-top: 38px; border-top: 1px solid var(--line); }
@@ -562,6 +565,7 @@
   .case-metadata p { font-size: 12px; }
   .case-section { display: flex; flex-direction: column; align-items: stretch; gap: 27px; padding: 35px 0; }
   .case-image-pair { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .case-section-visual-pair { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .case-study:not(.case-study-inline) .case-sections { padding-left: 16px; margin-top: 24px; }
   .drilldown-body { padding-left: 16px; }
   .drilldown-heading { gap: 12px; margin-bottom: 22px; }

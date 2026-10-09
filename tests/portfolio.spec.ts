@@ -32,6 +32,18 @@ for (const route of [
       await expect(page.locator(".case-section-copy > p")).toHaveText(
         project.sections.map((section) => section.text),
       );
+      if (project.slug === "aldea-investor-portal") {
+        const problemImages = page.locator("#problem .case-section-visual-pair img");
+        await expect(problemImages).toHaveCount(2);
+        await expect(problemImages.nth(0)).toHaveAttribute(
+          "src",
+          "/images/aldea-investor-portal-fund-level-report.png",
+        );
+        await expect(problemImages.nth(1)).toHaveAttribute(
+          "src",
+          "/images/aldea-investor-portal-detailed-report.png",
+        );
+      }
       for (const section of project.sections) {
         expect(section.text.split(/\s+/).length).toBeLessThanOrEqual(65);
         expect(
@@ -45,20 +57,32 @@ for (const route of [
         project.slug === "aldea-investor-portal" ||
         project.slug === "kuspace"
       ) {
-        await expect(
-          page.getByText("Interactive demo coming soon", { exact: true }),
-        ).toBeVisible();
+        if (project.media.demoUrl) {
+          await expect(
+            page.getByRole("link", {
+              name: project.slug === "aldea-investor-portal" ? "Test the portal" : "View demo",
+            }),
+          ).toHaveAttribute("href", project.media.demoUrl);
+        } else {
+          await expect(
+            page.getByText("Interactive demo coming soon", { exact: true }),
+          ).toBeVisible();
+        }
         if (project.media.loomUrl) {
           await expect(
             page.getByRole("link", { name: "Watch walkthrough" }),
           ).toHaveAttribute("href", project.media.loomUrl);
-          await expect(page.locator(".media-actions a")).toHaveCount(1);
         } else {
           await expect(
             page.getByText("Walkthrough coming soon", { exact: true }),
           ).toBeVisible();
-          await expect(page.locator(".media-actions a")).toHaveCount(0);
         }
+        const mediaLinkCount = [
+          project.media.demoUrl,
+          project.media.repositoryUrl,
+          project.media.loomUrl,
+        ].filter(Boolean).length;
+        await expect(page.locator(".media-actions a")).toHaveCount(mediaLinkCount);
       } else await expect(page.locator(".media-actions")).toHaveCount(0);
     } else if (route === "/contact") {
       await expect(page).toHaveTitle(`Contact — ${profile.name}`);
@@ -72,6 +96,19 @@ for (const route of [
       );
       await expect(page.locator(".bio")).toHaveText(profile.bio);
       await expect(page.locator(".project-row")).toHaveCount(4);
+      const kuspaceDemo = page.locator("#kuspace .project-demo-link");
+      await expect(kuspaceDemo).toHaveAttribute("href", "https://kuspace.vercel.app/");
+      const kuspaceLinkSpacing = await page.locator("#kuspace").evaluate((row) => {
+        const primary = row.querySelector(".project-toggle")!.getBoundingClientRect();
+        const secondary = row.querySelector(".project-demo-link")!.getBoundingClientRect();
+        return secondary.top - primary.bottom;
+      });
+      const portalLinkSpacing = await page.locator("#aldea-investor-portal").evaluate((row) => {
+        const primary = row.querySelector(".project-toggle")!.getBoundingClientRect();
+        const secondary = row.querySelector(".project-walkthrough-link")!.getBoundingClientRect();
+        return secondary.top - primary.bottom;
+      });
+      expect(kuspaceLinkSpacing).toBe(portalLinkSpacing);
       await expect(page.locator(".group-heading h3")).toHaveText([
         "Aldea Ventures",
         "Independent work",

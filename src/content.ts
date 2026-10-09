@@ -14,7 +14,7 @@ export type ProjectSection = {
   title: string;
   text: string;
   links?: { text: string; href: string }[];
-  visual: Visual;
+  visual: Visual | Visual[];
 };
 
 export type Project = {
@@ -105,24 +105,33 @@ export const projects: Project[] = [
           },
         ],
         visual: {
-          src: null,
-          alt: "Placeholder for an overview of funds in the Aldea Investor Portal",
+          src: "/images/aldea-investor-portal-overview.png",
+          alt: "Aldea Investor Portal overview for Aldea Tech Fund I showing quarterly KPIs, fund NAV, and quarter movement",
           label: "Fund overview",
-          caption: "An overview of the portfolio’s funds.",
-          aspectRatio: "8 / 5",
+          caption: "Aldea Tech Fund I | Quarterly overview",
+          aspectRatio: "2362 / 1662",
         },
       },
       {
         id: "problem",
         title: "The problem",
         text: "Static quarterly PDFs provide a fixed view of fund performance. The portal brings that information into a format where users can compare periods and explore individual investments.",
-        visual: {
-          src: null,
-          alt: "Placeholder for a quarter-to-quarter fund performance comparison",
-          label: "Quarterly comparison",
-          caption: "Comparing fund performance across reporting periods.",
-          aspectRatio: "8 / 5",
-        },
+        visual: [
+          {
+            src: "/images/aldea-investor-portal-fund-level-report.png",
+            alt: "Static fund-level investor report with fictional performance figures and portfolio totals",
+            label: "Fund-level report",
+            caption: "Fund-level report | Fictional figures",
+            aspectRatio: "2048 / 1446",
+          },
+          {
+            src: "/images/aldea-investor-portal-detailed-report.png",
+            alt: "Static detailed investor report for a fictional fund, showing fund metrics, distributions, and portfolio-company data",
+            label: "Detailed report",
+            caption: "Detailed portfolio report | Fictional figures",
+            aspectRatio: "2048 / 1446",
+          },
+        ],
       },
       {
         id: "context",
@@ -463,14 +472,14 @@ export const projects: Project[] = [
       },
     ],
     media: {
-      demoUrl: null,
+      demoUrl: "https://kuspace.vercel.app/",
       repositoryUrl: null,
       loomUrl: null,
       demoPoster: {
         src: null,
         alt: "Placeholder for a KUSPACE event-management product demo",
         label: "KUSPACE demo",
-        caption: "Demo coming soon",
+        caption: "Live event-management demo",
         aspectRatio: "16 / 9",
       },
       walkthroughPoster: {
