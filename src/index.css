@@ -46,8 +46,9 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 32px; }
-body { min-width: 320px; margin: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 32px; scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
+body { min-width: 320px; margin: 0; scrollbar-width: none; -ms-overflow-style: none; }
 #root { min-height: 100svh; }
 ::selection { color: var(--dark-blue); background: var(--mint); }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 5px; }

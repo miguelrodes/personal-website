@@ -135,7 +135,7 @@ test("work drilldown, keyboard focus, and real résumé asset", async ({
     createHash("sha256")
       .update(await pdf.body())
       .digest("hex"),
-  ).toBe("59f366e059f1691882da5ccade9bc4df0813e10d290f6c8c50a2933065785250");
+  ).toBe("0153109745c1c47ebe0991876f6ee80ecc4cc4c10dc5e346e1c993b7e2140fb0");
   await expect(page.locator(".portrait-links")).toHaveAttribute("id", "contact");
   await expect(page.locator(".portrait-links a")).toHaveCount(2);
   await expect(page.getByRole("button", { name: "email" })).toBeVisible();
@@ -200,7 +200,7 @@ test("header opens the portfolio and contact page and downloads the actual résu
   const downloadedFile = await download.path();
   expect(downloadedFile).toBeTruthy();
   expect(createHash("sha256").update(await readFile(downloadedFile!)).digest("hex"))
-    .toBe("59f366e059f1691882da5ccade9bc4df0813e10d290f6c8c50a2933065785250");
+    .toBe("0153109745c1c47ebe0991876f6ee80ecc4cc4c10dc5e346e1c993b7e2140fb0");
   await expect(page).toHaveURL(/\/contact$/);
   await navigation.getByRole("link", { name: "Portfolio", exact: true }).click();
   await expect(page).toHaveURL(/\/#work$/);

@@ -169,6 +169,7 @@ function MediaFrame({
   showCaption = true,
   showCorners = true,
   eager = false,
+  mockup,
 }: {
   visual: Visual;
   variant?: string;
@@ -176,6 +177,7 @@ function MediaFrame({
   showCaption?: boolean;
   showCorners?: boolean;
   eager?: boolean;
+  mockup?: { project: Project; sectionIndex: number };
 }) {
   const [imageExpanded, setImageExpanded] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -214,6 +216,12 @@ function MediaFrame({
               }
             }}
           />
+        ) : mockup ? (
+          <ProjectMockup
+            project={mockup.project}
+            visual={visual}
+            sectionIndex={mockup.sectionIndex}
+          />
         ) : (
           <>
             <div className="placeholder-center">
@@ -251,6 +259,187 @@ function MediaFrame({
         />
       )}
     </figure>
+  );
+}
+
+function ProjectMockup({
+  project,
+  visual,
+  sectionIndex,
+}: {
+  project: Project;
+  visual: Visual;
+  sectionIndex: number;
+}) {
+  const family =
+    project.slug === "kuspace"
+      ? "kuspace"
+      : project.slug === "aldea-investor-simulation"
+        ? "simulation"
+        : project.slug === "aldea-helios"
+          ? "helios"
+          : "portal";
+  const isKuspace = family === "kuspace";
+  const theme = {
+    primary: isKuspace ? "#001e28" : "#3d0028",
+    accent: isKuspace ? "#7bf5b3" : "#d886ff",
+    soft: isKuspace ? "#e5fbf0" : "#f6eafb",
+    panel: "#ffffff",
+    canvas: "#f7f7f5",
+    ink: "#172b31",
+    muted: "#728087",
+    line: "#e2e6e7",
+  };
+  const metrics = {
+    portal: [["PORTFOLIO VALUE", "$3.82M"], ["NET TVPI", "2.4×"], ["FUNDS", "28"]],
+    simulation: [["BASE TVPI", "2.4×"], ["NAV CHANGE", "+$1.2M"], ["EXIT CASES", "3"]],
+    helios: [["COMPANIES", "1,200+"], ["DATA SOURCES", "4"], ["MATCHED", "98%"]],
+    kuspace: [["UPCOMING EVENTS", "12"], ["TICKETS SOLD", "428"], ["GROSS SALES", "$8.6K"]],
+  }[family];
+  const navItems = {
+    portal: ["Overview", "Funds", "Companies", "Reports"],
+    simulation: ["Overview", "Assumptions", "Holdings", "Scenarios"],
+    helios: ["Home", "Companies", "Signals", "Sources"],
+    kuspace: ["Events", "Calendar", "Lineups", "Tickets"],
+  }[family];
+  const panelTitles = {
+    portal: ["Fund performance", "Quarterly comparison", "Company detail", "Investor report", "Portfolio overview"],
+    simulation: ["Scenario overview", "Portfolio impact", "TVPI assumptions", "Projected J-curve", "Scenario outputs"],
+    helios: ["Company signal network", "Record matching", "Company profile", "Data mapping", "Company relationships"],
+    kuspace: ["Event overview", "Weekly schedule", "Organization workspace", "Ticket checkout", "Event operations"],
+  }[family];
+  const sidePanel = {
+    portal: { title: "Top holdings", rows: [["Northstar Health", "Healthcare", "$840K"], ["Meridian Labs", "Technology", "$620K"], ["Cedar Robotics", "Industrial", "$410K"]] },
+    simulation: { title: "Exit assumptions", rows: [["Exit multiple", "Base case", "3.2×"], ["Stake sold", "Scenario", "75%"], ["Fund impact", "Projected", "+18%"]] },
+    helios: { title: "Connected sources", rows: [["Company CRM", "Synced", "Live"], ["Market data", "Updated", "Today"], ["Research notes", "Linked", "12"]] },
+    kuspace: { title: "Tonight’s lineup", rows: [["Doors open", "Main room", "9:00 PM"], ["Nia Sol", "Live set", "10:30 PM"], ["Afterhours", "Guest list", "11:45 PM"]] },
+  }[family];
+  const bars = family === "simulation"
+    ? [39, 58, 47, 76, 66, 98, 84, 122]
+    : [48, 72, 57, 95, 77, 110, 91, 128];
+  const topTitle = family === "kuspace" ? "KUSPACE | EVENT SPACE" : "ALDEA | INVESTMENT PLATFORM";
+
+  return (
+    <svg
+      className="project-mockup"
+      viewBox="0 0 800 500"
+      role="img"
+      aria-label={`${visual.alt}. Concept interface mockup with sample data.`}
+      preserveAspectRatio="none"
+    >
+      <rect width="800" height="500" fill={theme.canvas} />
+      <rect width="800" height="56" fill={theme.panel} />
+      <path d="M0 56h800" stroke={theme.line} />
+      <rect x="29" y="25" width="17" height="17" rx="3" fill={theme.primary} />
+      <path d="M34 33.5h7M37.5 30v7" stroke={theme.accent} strokeWidth="1.5" />
+      <text x="55" y="37" fill={theme.ink} fontSize="10" fontWeight="700" letterSpacing="1.2" fontFamily="Manrope, sans-serif">{topTitle}</text>
+      <rect x="651" y="25" width="91" height="19" rx="9.5" fill={theme.soft} />
+      <circle cx="663" cy="34.5" r="3" fill={theme.accent} />
+      <text x="671" y="38" fill={theme.primary} fontSize="8" fontWeight="700" letterSpacing=".7" fontFamily="Manrope, sans-serif">SAMPLE DATA</text>
+      <circle cx="763" cy="34" r="8" fill={theme.primary} opacity=".1" />
+
+      <rect y="56" width="150" height="444" fill={theme.panel} />
+      <path d="M150 56v444" stroke={theme.line} />
+      <text x="29" y="80" fill={theme.muted} fontSize="7" fontWeight="700" letterSpacing="1.1" fontFamily="Manrope, sans-serif">WORKSPACE</text>
+      {navItems.map((item, index) => {
+        const selected = index === sectionIndex % navItems.length;
+        const y = 98 + index * 34;
+        return (
+          <g key={item}>
+            {selected && <rect x="21" y={y - 12} width="119" height="25" rx="3" fill={theme.soft} />}
+            <rect x="31" y={y - 3} width="7" height="7" rx="1.5" fill={selected ? theme.accent : theme.line} />
+            <text x="45" y={y + 3} fill={selected ? theme.primary : theme.muted} fontSize="9" fontWeight={selected ? "700" : "500"} fontFamily="Manrope, sans-serif">{item}</text>
+          </g>
+        );
+      })}
+      <rect x="27" y="435" width="108" height="35" rx="3" fill={theme.canvas} />
+      <circle cx="41" cy="452" r="7" fill={theme.soft} />
+      <text x="54" y="450" fill={theme.ink} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">DEMO WORKSPACE</text>
+      <text x="54" y="460" fill={theme.muted} fontSize="6.5" fontFamily="Manrope, sans-serif">Preview environment</text>
+
+      <text x="173" y="81" fill={theme.muted} fontSize="7" letterSpacing=".8" fontFamily="Manrope, sans-serif">{project.title.toUpperCase()}  /  SAMPLE VIEW</text>
+      <text x="173" y="107" fill={theme.ink} fontSize="20" fontWeight="600" letterSpacing="-.5" fontFamily="Manrope, sans-serif">{visual.label}</text>
+      <rect x="692" y="87" width="73" height="22" rx="3" fill={theme.panel} stroke={theme.line} />
+      <text x="704" y="101" fill={theme.muted} fontSize="8" fontFamily="Manrope, sans-serif">{isKuspace ? "THIS WEEK" : "Q2 2026"}</text>
+
+      {metrics.map(([label, value], index) => {
+        const x = 173 + index * 201;
+        return (
+          <g key={label}>
+            <rect x={x} y="124" width="188" height="68" rx="3" fill={theme.panel} stroke={theme.line} />
+            <text x={x + 13} y="143" fill={theme.muted} fontSize="7" fontWeight="700" letterSpacing=".65" fontFamily="Manrope, sans-serif">{label}</text>
+            <text x={x + 13} y="174" fill={theme.ink} fontSize="20" fontWeight="600" letterSpacing="-.5" fontFamily="Manrope, sans-serif">{value}</text>
+            <path d={`M${x + 147} 166l7-7 6 4 9-12`} fill="none" stroke={theme.accent} strokeWidth="2" />
+          </g>
+        );
+      })}
+
+      <rect x="173" y="207" width="355" height="237" rx="3" fill={theme.panel} stroke={theme.line} />
+      <text x="190" y="230" fill={theme.ink} fontSize="10" fontWeight="700" fontFamily="Manrope, sans-serif">{panelTitles[sectionIndex] || visual.label}</text>
+      <text x="190" y="245" fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">Illustrative product view | Concept preview</text>
+
+      {family === "helios" ? (
+        <g>
+          {[270, 311, 352, 393].map((y) => <path key={y} d={`M218 286 C285 ${y - 20}, 337 ${y + 23}, 422 300`} fill="none" stroke={theme.line} strokeWidth="1.5" />)}
+          <path d="M252 373 316 309 383 367 448 289M252 373 383 367M316 309 448 289" fill="none" stroke={theme.accent} strokeWidth="1.4" opacity=".75" />
+          {[[252, 373, "Orbit"], [316, 309, "North"], [383, 367, "Cedar"], [448, 289, "Meridian"], [220, 286, "Source"], [478, 385, "Signal"]].map(([x, y, label], index) => (
+            <g key={label}>
+              <circle cx={Number(x)} cy={Number(y)} r={index < 4 ? 12 : 8} fill={index < 4 ? theme.soft : theme.canvas} stroke={index < 4 ? theme.accent : theme.line} strokeWidth="1.5" />
+              <circle cx={Number(x)} cy={Number(y)} r="3" fill={theme.primary} />
+              <text x={Number(x)} y={Number(y) + 24} textAnchor="middle" fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">{label}</text>
+            </g>
+          ))}
+        </g>
+      ) : family === "kuspace" ? (
+        <g>
+          {Array.from({ length: 5 }, (_, index) => {
+            const x = 215 + index * 58;
+            return <g key={x}><text x={x + 15} y="272" textAnchor="middle" fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">{["FRI", "SAT", "SUN", "MON", "TUE"][index]}</text><path d={`M${x} 282v126`} stroke={theme.line} strokeDasharray="2 3" /></g>;
+          })}
+          {[302, 332, 362, 392].map((y) => <path key={y} d={`M204 ${y}h300`} stroke={theme.line} />)}
+          <rect x="220" y="288" width="91" height="25" rx="3" fill={theme.soft} />
+          <rect x="281" y="318" width="111" height="25" rx="3" fill={theme.soft} />
+          <rect x="342" y="348" width="99" height="25" rx="3" fill={theme.soft} />
+          <rect x="228" y="378" width="110" height="25" rx="3" fill={theme.soft} />
+          <path d="M230 296h7v8h-7zM290 326h7v8h-7zM351 356h7v8h-7zM237 386h7v8h-7z" fill={theme.accent} />
+          <text x="243" y="301" fill={theme.primary} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">NIA SOL | MAIN ROOM</text>
+          <text x="303" y="331" fill={theme.primary} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">AFTERHOURS SET</text>
+          <text x="364" y="361" fill={theme.primary} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">SATURDAY LIVE</text>
+          <text x="250" y="396" fill={theme.primary} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">GUEST LIST | 9 PM</text>
+        </g>
+      ) : (
+        <g>
+          {[0, 1, 2, 3].map((row) => <path key={row} d={`M194 ${274 + row * 38}h314`} stroke={theme.line} />)}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
+            const x = 205 + index * 37;
+            const height = bars[(index + sectionIndex) % bars.length];
+            return <rect key={x} x={x} y={405 - height} width="19" height={height} rx="2" fill={index === (sectionIndex + 5) % 8 ? theme.accent : theme.soft} />;
+          })}
+          <path d={family === "simulation" ? "M211 356 C250 341 260 364 286 337 S331 320 354 331 396 281 420 305 462 270 494 257" : "M211 365 C246 349 266 360 286 338 S327 354 354 319 394 332 420 293 464 303 494 267"} fill="none" stroke={theme.primary} strokeWidth="2" />
+          <circle cx={family === "simulation" ? "494" : "494"} cy={family === "simulation" ? "257" : "267"} r="4" fill={theme.accent} stroke={theme.panel} strokeWidth="2" />
+          {["Q1", "Q2", "Q3", "Q4"].map((quarter, index) => <text key={quarter} x={218 + index * 80} y="428" fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">{quarter}</text>)}
+        </g>
+      )}
+
+      <rect x="540" y="207" width="225" height="237" rx="3" fill={theme.panel} stroke={theme.line} />
+      <text x="557" y="230" fill={theme.ink} fontSize="10" fontWeight="700" fontFamily="Manrope, sans-serif">{sidePanel.title}</text>
+      <text x="557" y="245" fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">{family === "kuspace" ? "Venue workspace" : "Updated for this view"}</text>
+      {sidePanel.rows.map(([title, detail, value], index) => {
+        const y = 275 + index * 49;
+        return (
+          <g key={title}>
+            <path d={`M555 ${y + 24}h195`} stroke={theme.line} />
+            <circle cx="565" cy={y - 3} r="9" fill={theme.soft} />
+            <text x="565" y={y} textAnchor="middle" fill={theme.primary} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">{String(index + 1).padStart(2, "0")}</text>
+            <text x="582" y={y - 4} fill={theme.ink} fontSize="8" fontWeight="600" fontFamily="Manrope, sans-serif">{title}</text>
+            <text x="582" y={y + 9} fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">{detail}</text>
+            <text x="749" y={y} textAnchor="end" fill={theme.primary} fontSize="7" fontWeight="700" fontFamily="Manrope, sans-serif">{value}</text>
+          </g>
+        );
+      })}
+      <text x="173" y="472" fill={theme.muted} fontSize="7" letterSpacing=".9" fontFamily="Manrope, sans-serif">{project.number}  |  CONCEPT PREVIEW  |  SAMPLE DATA</text>
+      <text x="765" y="472" textAnchor="end" fill={theme.muted} fontSize="7" fontFamily="Manrope, sans-serif">{project.title.toUpperCase()}</text>
+    </svg>
   );
 }
 
@@ -369,14 +558,20 @@ function ProjectPreview({ project }: { project: Project }) {
           <MediaFrame
             visual={project.preview}
             number={project.number}
-            showCaption={project.slug === "aldea-investor-portal"}
+            showCaption={[
+              "aldea-investor-portal",
+              "aldea-investor-simulation",
+              "aldea-helios",
+            ].includes(project.slug)}
             showCorners={false}
           />
         </div>
         <div className="project-copy">
           <div className="project-eyebrow eyebrow">
             <span>{project.number}</span>
-            <span>{project.discipline}</span>
+            <span className={project.slug === "aldea-helios" ? "project-discipline-title-case" : undefined}>
+              {project.discipline}
+            </span>
           </div>
           <h4 id={titleId}>
             <button
@@ -584,11 +779,6 @@ function HomePage() {
           >
             <div className="group-heading">
               <h3>{group}</h3>
-              <span className="eyebrow">
-                {group === "Aldea Ventures"
-                  ? "Investment technology\u2003|\u2003May - August 2027"
-                  : "Product & development / 1 project"}
-              </span>
             </div>
             {projects
               .filter((project) => project.group === group)
@@ -692,7 +882,7 @@ function ProjectMetadata({ project }: { project: Project }) {
       {project.technologies && (
         <div className="technology-meta">
           <span className="eyebrow">Built with</span>
-          <p>{project.technologies.join(" · ")}</p>
+          <p>{project.technologies.join(" | ")}</p>
         </div>
       )}
     </div>
@@ -735,7 +925,12 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
       </div>
     );
     const visual = (
-      <MediaFrame visual={section.visual} number={String(index + 1).padStart(2, "0")} showCorners={false} />
+      <MediaFrame
+        visual={section.visual}
+        number={String(index + 1).padStart(2, "0")}
+        showCorners={false}
+        mockup={inline ? { project, sectionIndex: index } : undefined}
+      />
     );
     return (
       <section

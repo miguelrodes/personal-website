@@ -57,7 +57,7 @@ export const profile = {
     src: "/images/miguel-rodes-knuth-profile.png",
     alt: "Portrait of Miguel Rodés Knuth",
     label: "Portrait",
-    caption: "Miguel Rodés Knuth · Boston, MA",
+    caption: "Miguel Rodés Knuth | Boston, MA",
     aspectRatio: "4 / 5",
   } satisfies Visual,
   banner: {
@@ -80,12 +80,12 @@ export const projects: Project[] = [
     title: "Aldea Investor Portal",
     group: "Aldea Ventures",
     accent: "blue",
-    discipline: "Product design · Full-stack development",
+    discipline: "Product design | Full-stack development",
     role: "Product Designer & Full-Stack Developer; sole developer",
     period: "May–August 2026",
     technologies: ["React", "TypeScript", "Supabase"],
     summary:
-      "An interactive reporting portal for exploring fund performance, comparing quarters, and drilling into 1,000+ underlying companies across 28 funds.",
+      "Interactive, unified reporting portal for exploring fund performance, comparing quarterly results, and drilling down into 1,000+ underlying companies across 28 funds.",
     preview: {
       src: "/images/aldea-investor-portal.png",
       alt: "Aldea Investor Portal showing a company performance scatter plot and investment details using mock data",
@@ -177,7 +177,7 @@ export const projects: Project[] = [
         src: null,
         alt: "Placeholder for the Aldea Investor Portal video walkthrough",
         label: "Portal walkthrough",
-        caption: "Aldea Investor Portal · Product walkthrough",
+        caption: "Aldea Investor Portal | Product walkthrough",
         aspectRatio: "16 / 9",
       },
     },
@@ -188,17 +188,17 @@ export const projects: Project[] = [
     title: "Aldea Investor Simulation",
     group: "Aldea Ventures",
     accent: "blue",
-    discipline: "Investment modeling · Development",
+    discipline: "Investment modeling | Development",
     role: "Co-developer",
     period: "May–August 2026",
     technologies: null,
     summary:
-      "A scenario tool for exploring how investment exits could affect portfolio holdings, investor distributions, and the fund’s projected J-curve.",
+      "Simulation tool that allows investors to adjust TVPI assumptions and model exit scenarios to assess their impact on fund valuations, portfolio holdings, investor distributions, and the projected J-curve.",
     preview: {
       src: "/images/aldea-investor-simulation-bottom-trimmed.png",
       alt: "Aldea Investor Simulation for Tech Fund I, with a fund write-off scenario, performance metrics, and a projected J-curve",
       label: "Projected J-curve",
-      caption: "Exploring the projected effects of an investment exit.",
+      caption: "Investor Portal - Simulation Mode",
       aspectRatio: "1120 / 766",
     },
     sections: [
@@ -278,17 +278,17 @@ export const projects: Project[] = [
     title: "Aldea Helios",
     group: "Aldea Ventures",
     accent: "blue",
-    discipline: "Platform development · Data",
+    discipline: "Platform Development | Investment Intelligence",
     role: "Platform development and data contributions",
     period: "May–August 2026",
     technologies: null,
     summary:
-      "Data and reliability improvements to Aldea’s investment-intelligence platform, supporting company tracking across 1,200+ companies.",
+      "Internal investment intelligence platform that consolidates, organizes, and connects company data from multiple sources to support investment research, analysis, and tracking.",
     preview: {
       src: "/images/aldea-helios.png",
       alt: "Aldea Helios company intelligence dashboard showing agent activity and a network of company signals",
       label: "Company intelligence",
-      caption: "Company tracking within Aldea’s existing platform.",
+      caption: "Aldea Helios - Home",
       aspectRatio: "1320 / 922",
     },
     sections: [
@@ -380,7 +380,7 @@ export const projects: Project[] = [
     title: "KUSPACE",
     group: "Independent work",
     accent: "orange",
-    discipline: "Product design · Full-stack development",
+    discipline: "Product design | Full-stack development",
     role: "Product Designer & Full-Stack Developer; sole developer",
     period: "October 2025–June 2026",
     technologies: [
@@ -392,7 +392,7 @@ export const projects: Project[] = [
       "Stripe",
     ],
     summary:
-      "An event-management MVP for organizers and nightclubs, bringing event setup, scheduling, lineups, budgets, guestlists, and ticketing into one product.",
+      "An event-management MVP for nightclubs and even labels, bringing event setup, scheduling, lineups, budgets, guestlists, and ticketing into one product.",
     preview: {
       src: "/images/kuspace-portfolio-cropped.png",
       alt: "KUSPACE logo in white on a black background",
@@ -477,7 +477,7 @@ export const projects: Project[] = [
         src: null,
         alt: "Placeholder for the KUSPACE product video walkthrough",
         label: "KUSPACE walkthrough",
-        caption: "KUSPACE · Product walkthrough",
+        caption: "KUSPACE | Product walkthrough",
         aspectRatio: "16 / 9",
       },
     },
