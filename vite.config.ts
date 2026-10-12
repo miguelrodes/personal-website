@@ -13,12 +13,13 @@ const escapeHtml = (value: string) =>
 
 // Real HTML entry files let ordinary static hosts serve direct project URLs.
 export default defineConfig({
+  resolve: { alias: { "@demo": resolve("src/demo") } },
   plugins: [
     react(),
     {
       name: "static-project-routes",
       apply: "build",
-      closeBundle() {
+      writeBundle() {
         const output = resolve("dist");
         const html = readFileSync(resolve(output, "index.html"), "utf8");
         for (const project of projects) {

@@ -1,0 +1,166 @@
+@import "tailwindcss" source(none);
+@source "./";
+@config "./tailwind.config.ts";
+@theme { --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05); --blur-sm: 4px; --backdrop-blur-sm: 4px; --default-ring-width: 3px; --default-ring-color: rgb(59 130 246 / 0.5); }
+  :root {
+    /* Shared page-content column width. Every page's own section
+       containers should bind to this rather than hardcoding their own
+       max-width, so the content column stays uniform across pages and
+       within a page as new sections are added. A page that genuinely
+       needs a wider column (e.g. Companies, for its Places atlas map)
+       should override this custom property on its own root class rather
+       than defining a separate one, so shared components like the
+       footer still pick up the right width for whichever page they're
+       rendered on. */
+    --site-content: 1120px;
+
+    /* Public-site type accents use a darker tone on light surfaces. */
+    --brand-accent-on-dark: #f26b4f;
+    --brand-accent-on-light: #ad452f;
+
+    /* Light mode - Primary (default for most sections) */
+    --background: 38 29% 94%;
+    --foreground: 0 0% 7%;
+
+    --card: 35 19% 88%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 35 19% 88%;
+    --popover-foreground: 0 0% 7%;
+
+    /* Burgundy as primary accent */
+    --primary: 321 100% 12%;
+    --primary-foreground: 40 27% 95%;
+
+    --secondary: 35 19% 88%;
+    --secondary-foreground: 0 0% 7%;
+
+    --muted: 35 12% 85%;
+    --muted-foreground: 0 0% 48%;
+
+    /* Orange accent for CTAs */
+    --accent: 10 100% 64%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 40 27% 95%;
+
+    --border: 35 15% 80%;
+    --input: 35 15% 82%;
+    --ring: 321 100% 12%;
+
+    --radius: 0.5rem;
+
+    /* Custom brand tokens */
+    --burgundy: 339 55% 27%;
+    --burgundy-light: 339 45% 35%;
+
+    --orange: 10 100% 64%;
+    --orange-light: 10 100% 72%;
+    --orange-dark: 10 100% 55%;
+
+    --warm-white: 38 29% 94%;
+    --neutral-grey: 35 19% 88%;
+
+    --charcoal: 0 0% 7%;
+    --charcoal-light: 0 0% 11%;
+
+    /* Text colors */
+    --text-primary: 0 0% 7%;
+    --text-secondary: 0 0% 29%;
+    --text-muted: 0 0% 48%;
+
+    --text-on-dark: 40 27% 95%;
+    --text-on-dark-secondary: 40 7% 70%;
+
+    /* Gradients */
+    --gradient-burgundy: linear-gradient(135deg, hsl(321 100% 12%), hsl(321 60% 20%));
+    --gradient-orange: linear-gradient(135deg, hsl(10 100% 64%), hsl(10 100% 55%));
+    --gradient-dark: linear-gradient(180deg, hsl(0 0% 7%), hsl(0 0% 11%));
+
+    /* Shadows */
+    --shadow-burgundy: 0 4px 30px hsl(321 100% 12% / 0.15);
+    --shadow-orange: 0 4px 30px hsl(10 100% 64% / 0.25);
+    --shadow-elevated: 0 20px 60px hsl(0 0% 0% / 0.1);
+
+    /* Font families */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --font-reporting: 'Onest', 'Inter', sans-serif;
+  }
+
+  /* Dark mode for hero, footer, stat sections */
+  .dark-section {
+    --background: 0 0% 7%;
+    --foreground: 40 27% 95%;
+    --card: 0 0% 11%;
+    --card-foreground: 40 27% 95%;
+    --muted-foreground: 40 7% 70%;
+    --border: 0 0% 16%;
+  }
+
+  .reporting-theme {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 7%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 41%;
+    --border: 0 0% 89%;
+    --input: 0 0% 92%;
+    --font-heading: var(--font-reporting);
+    --font-body: var(--font-reporting);
+    font-family: var(--font-reporting);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  /* Dark section variant — flip all text vars to near-white */
+  .section-dark {
+    --charcoal: 0 0% 96%;          /* text-charcoal* → #F4F4F4 */
+    --foreground: 0 0% 96%;        /* default inherited text → #F4F4F4 */
+    --muted-foreground: 0 0% 68%;  /* table headers, muted labels */
+    --border: 0 0% 100% / 0.14;   /* border-border → subtle white */
+    color: hsl(var(--charcoal));   /* re-declare so inherited color uses overridden var */
+  }
+
+  /* Light-card islands inside dark sections restore original dark values */
+  .section-dark .section-light {
+    --charcoal: 0 0% 7%;
+    --foreground: 0 0% 7%;
+    --muted-foreground: 0 0% 41%;
+    --border: 0 0% 89%;
+    color: hsl(var(--charcoal));   /* re-declare so inherited color uses overridden var */
+  }
+
+  /* Table row dividers and outer wrappers adapt in dark sections */
+  .section-dark tr,
+  .section-dark .border-y {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .section-dark thead tr {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  /* Restore borders inside light-card islands */
+  .section-dark .section-light tr,
+  .section-dark .section-light thead tr,
+  .section-dark .section-light .border-y {
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .reporting-theme h1,
+  .reporting-theme h2,
+  .reporting-theme h3,
+  .reporting-theme h4,
+  .reporting-theme h5,
+  .reporting-theme h6 {
+    font-family: var(--font-reporting);
+    letter-spacing: -0.035em;
+  }
+.font-reporting { font-family: var(--font-reporting); }

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { profile, projects } from "./content";
 import type { Project, ProjectSection, Visual } from "./content";
 import "./App.css";
+import InvestorPortalModal from "./InvestorPortalModal";
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   return (
@@ -170,6 +171,7 @@ function MediaFrame({
   showCorners = true,
   eager = false,
   mockup,
+  imageAction,
 }: {
   visual: Visual;
   variant?: string;
@@ -178,10 +180,42 @@ function MediaFrame({
   showCorners?: boolean;
   eager?: boolean;
   mockup?: { project: Project; sectionIndex: number };
+  imageAction?:
+    | { kind: "button"; label: string; onClick: () => void }
+    | { kind: "link"; label: string; href: string };
 }) {
   const [imageExpanded, setImageExpanded] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const closeLightbox = useCallback(() => setImageExpanded(false), []);
+  const image = (
+    <img
+      src={visual.src!}
+      alt={imageAction ? "" : visual.alt}
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
+      style={{ objectPosition: visual.objectPosition }}
+      role={imageAction ? undefined : "button"}
+      tabIndex={imageAction ? undefined : 0}
+      aria-label={imageAction ? undefined : `Open larger image: ${visual.alt || visual.label}`}
+      aria-haspopup={imageAction ? undefined : "dialog"}
+      aria-hidden={imageAction ? true : undefined}
+      ref={imageRef}
+      onClick={imageAction ? undefined : (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.currentTarget.focus({ preventScroll: true });
+        setImageExpanded(true);
+      }}
+      onKeyDown={imageAction ? undefined : (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          event.currentTarget.focus({ preventScroll: true });
+          setImageExpanded(true);
+        }
+      }}
+    />
+  );
 
   return (
     <figure className={`media-figure ${variant}`}>
@@ -190,32 +224,15 @@ function MediaFrame({
         style={{ aspectRatio: visual.aspectRatio || "8 / 5" }}
       >
         {visual.src ? (
-          <img
-            src={visual.src}
-            alt={visual.alt}
-            loading={eager ? "eager" : "lazy"}
-            decoding="async"
-            style={{ objectPosition: visual.objectPosition }}
-            role="button"
-            tabIndex={0}
-            aria-label={`Open larger image: ${visual.alt || visual.label}`}
-            aria-haspopup="dialog"
-            ref={imageRef}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              event.currentTarget.focus({ preventScroll: true });
-              setImageExpanded(true);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                event.stopPropagation();
-                event.currentTarget.focus({ preventScroll: true });
-                setImageExpanded(true);
-              }
-            }}
-          />
+          imageAction?.kind === "button" ? (
+            <button type="button" className="media-frame-image-button" aria-label={imageAction.label} onClick={imageAction.onClick}>
+              {image}
+            </button>
+          ) : imageAction?.kind === "link" ? (
+            <a className="media-frame-image-link" href={imageAction.href} target="_blank" rel="noopener noreferrer" aria-label={imageAction.label}>
+              {image}
+            </a>
+          ) : image
         ) : mockup ? (
           <ProjectMockup
             project={mockup.project}
@@ -507,6 +524,7 @@ function TableOfContents({ entries }: { entries: ContentsEntry[] }) {
 
 function ProjectPreview({ project }: { project: Project }) {
   const [expanded, setExpanded] = useState(false);
+  const [investorDemoOpen, setInvestorDemoOpen] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -589,7 +607,7 @@ function ProjectPreview({ project }: { project: Project }) {
           <button
             ref={toggleRef}
             type="button"
-            className={`text-link project-link project-toggle${project.media.loomUrl || (project.slug === "kuspace" && project.media.demoUrl) ? " project-link-with-secondary" : ""}`}
+            className={`text-link project-link project-toggle${project.media.loomUrl || (project.slug === "kuspace" && (project.media.demoUrl || project.media.repositoryUrl)) ? " project-link-with-secondary" : ""}`}
             aria-expanded={expanded}
             aria-controls={detailsId}
             onClick={() => changeExpanded(!expanded)}
@@ -602,10 +620,25 @@ function ProjectPreview({ project }: { project: Project }) {
               Demo
             </ExternalLink>
           )}
-          {project.media.loomUrl && (
+          {project.slug === "kuspace" && project.media.repositoryUrl && (
+            <ExternalLink className="text-link project-repository-link" href={project.media.repositoryUrl}>
+              Public repository
+            </ExternalLink>
+          )}
+          {project.slug !== "kuspace" && project.media.loomUrl && (
             <ExternalLink className="text-link project-walkthrough-link" href={project.media.loomUrl}>
               Video walkthrough
             </ExternalLink>
+          )}
+          {project.slug === "aldea-investor-portal" && (
+            <button
+              type="button"
+              className="text-link project-demo-link project-portal-demo-link project-toggle"
+              aria-haspopup="dialog"
+              onClick={() => setInvestorDemoOpen(true)}
+            >
+              Explore demo <Arrow diagonal />
+            </button>
           )}
         </div>
       </div>
@@ -628,14 +661,15 @@ function ProjectPreview({ project }: { project: Project }) {
             </div>
             <div className="drilldown-body">
               <ProjectMetadata project={project} />
-              <CaseSections project={project} inline />
-              <button type="button" className="text-link drilldown-close drilldown-close-bottom" onClick={() => changeExpanded(false)}>
+              <CaseSections project={project} inline onOpenDemo={() => setInvestorDemoOpen(true)} />
+              <button type="button" className={`text-link drilldown-close drilldown-close-bottom${["aldea-investor-portal", "aldea-investor-simulation"].includes(project.slug) ? " drilldown-close-bottom-tight" : ""}`} onClick={() => changeExpanded(false)}>
                 Close project <span aria-hidden="true">↑</span>
               </button>
             </div>
           </div>
         </div>
       </div>
+      {investorDemoOpen && <InvestorPortalModal onClose={() => setInvestorDemoOpen(false)} />}
     </article>
   );
 }
@@ -790,76 +824,109 @@ function HomePage() {
 
 function MediaActions({ project }: { project: Project }) {
   const { media } = project;
-  if (project.slug !== "aldea-investor-portal" && project.slug !== "kuspace")
-    return null;
-  return (
-    <div className="media-actions">
-      <div className="demo-module">
-        {media.demoPoster && (
-          <MediaFrame
-            visual={media.demoPoster}
-            variant="demo-poster"
-            showCaption={false}
-          />
+  if (project.slug !== "kuspace") return null;
+  const demoVisual = project.preview;
+
+  const demoModule = (
+    <div className="demo-module">
+      {demoVisual && (
+        <MediaFrame
+          visual={demoVisual}
+          variant="demo-poster"
+          showCaption={false}
+          showCorners={false}
+          imageAction={media.demoUrl ? {
+            kind: "link",
+            href: media.demoUrl,
+            label: "Open KUSPACE demo (opens in a new tab)",
+          } : undefined}
+        />
+      )}
+      <div className="demo-description">
+        <p className="module-title">Explore KUSPACE</p>
+        <p>An event workspace, from planning to ticketing.</p>
+        {media.demoUrl ? (
+          <ExternalLink className="text-link" href={media.demoUrl}>
+            View demo
+          </ExternalLink>
+        ) : (
+          <span className="media-status">Interactive demo coming soon</span>
         )}
-        <div className="demo-description">
-          <p className="module-title">
-            {project.slug === "aldea-investor-portal"
-              ? "Test the portal"
-              : "Explore KUSPACE"}
-          </p>
-          <p>
-            {project.slug === "aldea-investor-portal"
-              ? "Explore the reporting interface using sample data"
-              : "An event workspace, from planning to ticketing."}
-          </p>
-          {media.demoUrl ? (
-            <>
-              <ExternalLink className="text-link" href={media.demoUrl}>
-                {project.slug === "aldea-investor-portal"
-                  ? "Test the portal"
-                  : "View demo"}
-              </ExternalLink>
-              {project.slug === "aldea-investor-portal" && (
-                <span className="media-status">Demo with synthetic data</span>
-              )}
-            </>
-          ) : (
-            <span className="media-status">Interactive demo coming soon</span>
-          )}
-          {project.slug === "kuspace" &&
-            (media.repositoryUrl ? (
-              <ExternalLink className="text-link" href={media.repositoryUrl}>
-                Public repository
-              </ExternalLink>
-            ) : (
-              <span className="media-status">
-                Public repository coming soon
-              </span>
-            ))}
+        {media.repositoryUrl ? (
+          <ExternalLink className="text-link" href={media.repositoryUrl}>
+            Public repository
+          </ExternalLink>
+        ) : (
+          <span className="media-status">
+            Public repository coming soon
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
+  return <div className="media-actions">{demoModule}</div>;
+}
+
+function InvestorPortalOutcomeMedia({ project, onOpenDemo }: { project: Project; onOpenDemo?: () => void }) {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const closeDemo = useCallback(() => setDemoOpen(false), []);
+  const openDemo = onOpenDemo ?? (() => setDemoOpen(true));
+  const demoVisual = project.media.demoPoster ?? project.preview;
+  const walkthroughVisual = project.media.walkthroughPoster;
+
+  return (
+    <div className="portal-outcome-media-stack">
+      <div className="portal-outcome-media-item">
+        <MediaFrame
+          visual={demoVisual}
+          variant="demo-poster"
+          showCaption={false}
+          showCorners={false}
+          imageAction={{ kind: "button", label: "Explore Demo", onClick: openDemo }}
+        />
+        <div>
+          <button
+            type="button"
+            className="text-link portal-demo-trigger"
+            aria-haspopup="dialog"
+            onClick={openDemo}
+          >
+            Explore Demo <Arrow />
+          </button>
+          <span className="walkthrough-caption">Aldea Investor Portal - Limited interactive demo</span>
         </div>
       </div>
-      <div className="walkthrough-module">
-        {media.walkthroughPoster && (
+
+      <div className="portal-outcome-media-item">
+        {walkthroughVisual && (
           <MediaFrame
-            visual={media.walkthroughPoster}
+            visual={walkthroughVisual}
             variant="walkthrough-poster"
             showCaption={false}
+            showCorners={false}
+            imageAction={project.media.loomUrl ? {
+              kind: "link",
+              href: project.media.loomUrl,
+              label: "Watch walkthrough (opens in a new tab)",
+            } : undefined}
           />
         )}
         <div>
-          {media.loomUrl ? (
-            <ExternalLink className="text-link" href={media.loomUrl}>
+          {project.media.loomUrl ? (
+            <ExternalLink className="text-link" href={project.media.loomUrl}>
               Watch walkthrough
             </ExternalLink>
           ) : (
             <span className="media-status">Walkthrough coming soon</span>
           )}
-          <span className="walkthrough-caption">
-            {media.walkthroughPoster?.caption}
-          </span>
+          {walkthroughVisual && (
+            <span className="walkthrough-caption">{walkthroughVisual.caption}</span>
+          )}
         </div>
       </div>
+
+      {!onOpenDemo && demoOpen && <InvestorPortalModal onClose={closeDemo} />}
     </div>
   );
 }
@@ -878,7 +945,7 @@ function ProjectMetadata({ project }: { project: Project }) {
       {project.technologies && (
         <div className="technology-meta">
           <span className="eyebrow">Built with</span>
-          <p>{project.technologies.join(" | ")}</p>
+          <p>{project.technologies.join(" | ")}</p>
         </div>
       )}
     </div>
@@ -886,27 +953,64 @@ function ProjectMetadata({ project }: { project: Project }) {
 }
 
 function renderSectionText(section: ProjectSection): ReactNode {
-  let remaining = section.text;
+  const annotations: Array<{
+    start: number;
+    end: number;
+    text: string;
+    type: "link" | "bold";
+    href?: string;
+  }> = [];
   const parts: ReactNode[] = [];
 
-  section.links?.forEach((link, index) => {
-    const match = remaining.indexOf(link.text);
-    if (match === -1) return;
-    parts.push(remaining.slice(0, match));
-    parts.push(
-      <a key={`${link.text}-${index}`} href={link.href} target="_blank" rel="noopener noreferrer">
-        {link.text}
-      </a>,
-    );
-    remaining = remaining.slice(match + link.text.length);
+  section.links?.forEach((link) => {
+    const start = section.text.indexOf(link.text);
+    if (start !== -1) {
+      annotations.push({
+        start,
+        end: start + link.text.length,
+        text: link.text,
+        type: "link",
+        href: link.href,
+      });
+    }
+  });
+  section.bold?.forEach((text) => {
+    const start = section.text.indexOf(text);
+    if (start !== -1) {
+      annotations.push({ start, end: start + text.length, text, type: "bold" });
+    }
   });
 
-  parts.push(remaining);
+  annotations.sort((a, b) => a.start - b.start);
+
+  let cursor = 0;
+  annotations.forEach((annotation, index) => {
+    if (annotation.start < cursor) return;
+    parts.push(section.text.slice(cursor, annotation.start));
+    parts.push(
+      annotation.type === "link" ? (
+        <a
+          key={`${annotation.type}-${index}`}
+          href={annotation.href}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {annotation.text}
+        </a>
+      ) : (
+        <strong key={`${annotation.type}-${index}`}>{annotation.text}</strong>
+      ),
+    );
+    cursor = annotation.end;
+  });
+
+  parts.push(section.text.slice(cursor));
   return parts;
 }
 
-function CaseSections({ project, inline = false }: { project: Project; inline?: boolean }) {
+function CaseSections({ project, inline = false, onOpenDemo }: { project: Project; inline?: boolean; onOpenDemo?: () => void }) {
   const projectIndex = projects.indexOf(project);
+  const pairMiddleSections = !["aldea-investor-portal", "aldea-helios"].includes(project.slug);
   const pairStart = projectIndex % 2 === 0 ? 2 : 1;
   const Heading = inline ? "h5" : "h2";
   const renderSection = (index: number, paired = false) => {
@@ -922,7 +1026,11 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
     );
     const visuals = Array.isArray(section.visual) ? section.visual : [section.visual];
     const hasVisualPair = visuals.length > 1;
-    const visual = hasVisualPair ? (
+    const isPortalOutcome =
+      project.slug === "aldea-investor-portal" && section.id === "outcome";
+    const visual = isPortalOutcome ? (
+      <InvestorPortalOutcomeMedia project={project} onOpenDemo={onOpenDemo} />
+    ) : hasVisualPair ? (
       <div className="case-section-visual-pair">
         {visuals.map((item) => (
           <MediaFrame
@@ -936,6 +1044,11 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
     ) : (
       <MediaFrame
         visual={visuals[0]}
+        variant={
+          project.slug === "aldea-investor-portal" && section.id === "process"
+            ? "investor-portal-process-image"
+            : undefined
+        }
         number={String(index + 1).padStart(2, "0")}
         showCorners={false}
         mockup={inline ? { project, sectionIndex: index } : undefined}
@@ -945,7 +1058,7 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
       <section
         key={section.id}
         id={id}
-        className={`case-section${paired ? " case-section-paired" : ""}${hasVisualPair ? " case-section-wide-pair" : ""}`}
+        className={`case-section${paired ? " case-section-paired" : ""}${hasVisualPair ? " case-section-wide-pair" : ""}${project.slug === "aldea-investor-portal" && section.id === "outcome" ? " case-section-no-divider" : ""}`}
         aria-labelledby={`${id}-title`}
       >
         {hasVisualPair ? (
@@ -959,7 +1072,7 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
             {imageFirst ? copy : visual}
           </>
         )}
-        {section.id === "outcome" && <MediaActions project={project} />}
+        {section.id === "outcome" && !isPortalOutcome && <MediaActions project={project} />}
       </section>
     );
   };
@@ -967,8 +1080,8 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
   return (
     <div className="case-sections">
       {project.sections.map((section, index) => {
-        if (index === pairStart + 1) return null;
-        if (index === pairStart) {
+        if (pairMiddleSections && index === pairStart + 1) return null;
+        if (pairMiddleSections && index === pairStart) {
           return (
             <div className="case-image-pair" key={`${section.id}-pair`}>
               {renderSection(index, true)}

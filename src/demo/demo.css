@@ -1,0 +1,26 @@
+/* CSS zoom sizes this block to its container; an inverse percentage width would overflow it. */
+.aldea-demo { isolation: isolate; position: relative; min-height: 100%; zoom: .85; padding: 10px 36px 30px; background: var(--portal-demo-background, #f4f1eb); color-scheme: light; font: 400 16px/1.5 'Onest', sans-serif; text-align: left; letter-spacing: normal; text-wrap: wrap; --font-reporting: 'Onest', sans-serif; }
+.aldea-demo :focus-visible { outline: 2px solid #d886ff; outline-offset: 3px; }
+.aldea-demo section { scroll-margin-top: 20px; }
+.aldea-demo .demo-section-rail { display: none; }
+/* Original report column: 1400px page minus 64px gutters and 128px navigation rail. */
+.aldea-demo > .relative.space-y-10 { max-width: 1208px; margin-inline: auto; padding-right: 0; }
+.aldea-demo a { text-underline-offset: 2px; }
+.aldea-demo .stage-mix-chart { width: 240px; max-width: 100%; height: auto; }
+.aldea-demo .stage-mix-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-width: 360px; gap: 8px; }
+@media(max-width: 640px) {
+  .aldea-demo { zoom: 1; padding: 10px 14px 22px; }
+  .aldea-demo section > .relative { padding-right: 0; }
+  .aldea-demo section { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
+}
+/* Keep the source palette while making its small, muted labels readable. */
+.aldea-demo [class*="text-charcoal/3"],
+.aldea-demo [class*="text-charcoal/4"],
+.aldea-demo [class*="text-charcoal/5"] { color: #626262; }
+.aldea-demo [class*="text-[#3D0028]/55"] { color: #77546b; }
+.aldea-demo .text-\[\#D886FF\] { color: #82459d; }
+.aldea-demo .bg-\[\#3D0028\] .text-\[\#D886FF\] { color: #d886ff; }
+.aldea-demo .bg-orange.text-white { color: #3d0028; }
+@media (prefers-reduced-motion: reduce) {
+  .aldea-demo *, .aldea-demo *::before, .aldea-demo *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
+}

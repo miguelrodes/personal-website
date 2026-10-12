@@ -35,7 +35,7 @@ for (const [index, project] of projects.entries()) {
     expect(nextTop - followingTop).toBeGreaterThan(height - 50);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     if (!isMobile) {
-      const images = await details.locator(".case-image-pair .media-frame").all();
+      const images = await details.locator(".case-image-pair .media-frame, .case-section-visual-pair .media-frame").all();
       const first = (await images[0].boundingBox())!;
       const second = (await images[1].boundingBox())!;
       expect(Math.abs(first.y - second.y)).toBeLessThan(2);
@@ -46,7 +46,7 @@ for (const [index, project] of projects.entries()) {
     expect(accessibility.violations).toEqual([]);
     if (index === 0 || index === 3) {
       await page.screenshot({ path: testInfo.outputPath("expanded-preview.png") });
-      await details.locator(".case-image-pair").scrollIntoViewIfNeeded();
+      await details.locator(".case-image-pair, .case-section-visual-pair").first().scrollIntoViewIfNeeded();
       await page.screenshot({ path: testInfo.outputPath("paired-visuals.png") });
     }
     await details.locator(".drilldown-close-bottom").click();
