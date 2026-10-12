@@ -27,6 +27,7 @@
   --surface: #f4f4f4;
   --background: var(--white);
   --content-width: 1180px;
+  --portfolio-motion-scale: .75;
 }
 
 :root[data-project-theme='burgundy'] {

@@ -25,7 +25,8 @@ export default function InvestorPortalModal({ onClose }: { onClose: () => void }
     Object.assign(body.style, { position: "fixed", top: `-${y}px`, left: `-${x}px`, width: "100%", overflow: "hidden" });
     dialog.showModal();
     void loadInvestorPortalDemo().catch(() => undefined);
-    const loadingTimer = window.setTimeout(() => setShowDemo(true), 700);
+    const motionScale = Number.parseFloat(getComputedStyle(dialog).getPropertyValue("--portfolio-motion-scale")) || 1;
+    const loadingTimer = window.setTimeout(() => setShowDemo(true), 700 * motionScale);
     return () => {
       window.clearTimeout(loadingTimer);
       dialog.close();

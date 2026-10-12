@@ -1,5 +1,5 @@
-.portal-demo-dialog { --portal-demo-background: #f4f1eb; position: fixed; inset: 0; width: 95vw; height: 94dvh; max-width: 95vw; max-height: 94dvh; margin: auto; padding: 0; border: 1px solid #ccd2d4; border-radius: 12px; overflow: visible; color: #001e28; background: var(--portal-demo-background); box-shadow: 0 25px 100px #0005; animation: portal-demo-fade-in 220ms ease-out both; }
-.portal-demo-dialog::backdrop { background: rgb(0 16 23 / 72%); animation: portal-demo-fade-in 220ms ease-out both; }
+.portal-demo-dialog { --portal-demo-background: #f4f1eb; position: fixed; inset: 0; width: 95vw; height: 94dvh; max-width: 95vw; max-height: 94dvh; margin: auto; padding: 0; border: 1px solid #ccd2d4; border-radius: 12px; overflow: visible; color: #001e28; background: var(--portal-demo-background); box-shadow: 0 25px 100px #0005; animation: portal-demo-fade-in calc(220ms * var(--portfolio-motion-scale)) ease-out both; }
+.portal-demo-dialog::backdrop { background: rgb(0 16 23 / 72%); animation: portal-demo-fade-in calc(220ms * var(--portfolio-motion-scale)) ease-out both; }
 .portal-demo-frame { display: flex; flex-direction: column; height: 100%; overflow: hidden; border-radius: inherit; }
 .portal-demo-header { display: flex; flex: 0 0 auto; align-items: center; gap: 24px; padding: 14px 36px; border-bottom: 1px solid #d8d3ca; background: var(--portal-demo-background); }
 .portal-demo-logo { display: block; width: 96px; height: auto; flex: 0 0 auto; }
@@ -8,7 +8,7 @@
 /* Native dialog opening focuses this region; its ring would cross the header. */
 .portal-demo-dialog .portal-demo-scroll:focus { outline: none; }
 .portal-demo-status { padding: 48px 24px; color: #001e28; font: 400 16px/1.5 'Manrope', sans-serif; }
-.portal-demo-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; font-weight: 500; animation: portal-demo-fade-in 180ms ease-out 200ms both; }
+.portal-demo-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; font-weight: 500; animation: portal-demo-fade-in calc(180ms * var(--portfolio-motion-scale)) ease-out calc(200ms * var(--portfolio-motion-scale)) both; }
 @keyframes portal-demo-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .portal-demo-dialog, .portal-demo-dialog::backdrop, .portal-demo-loading { animation: none; }
