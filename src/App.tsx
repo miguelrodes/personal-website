@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { profile, projects } from "./content";
 import type { Project, ProjectSection, Visual } from "./content";
 import "./App.css";
-import InvestorPortalModal from "./InvestorPortalModal";
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   return (
@@ -172,6 +171,7 @@ function MediaFrame({
   eager = false,
   mockup,
   imageAction,
+  imageInteractive = true,
 }: {
   visual: Visual;
   variant?: string;
@@ -180,6 +180,7 @@ function MediaFrame({
   showCorners?: boolean;
   eager?: boolean;
   mockup?: { project: Project; sectionIndex: number };
+  imageInteractive?: boolean;
   imageAction?:
     | { kind: "button"; label: string; onClick: () => void }
     | { kind: "link"; label: string; href: string };
@@ -187,6 +188,7 @@ function MediaFrame({
   const [imageExpanded, setImageExpanded] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const closeLightbox = useCallback(() => setImageExpanded(false), []);
+  const canOpenLightbox = imageInteractive && !imageAction;
   const image = (
     <img
       src={visual.src!}
@@ -194,19 +196,19 @@ function MediaFrame({
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       style={{ objectPosition: visual.objectPosition }}
-      role={imageAction ? undefined : "button"}
-      tabIndex={imageAction ? undefined : 0}
-      aria-label={imageAction ? undefined : `Open larger image: ${visual.alt || visual.label}`}
-      aria-haspopup={imageAction ? undefined : "dialog"}
+      role={canOpenLightbox ? "button" : undefined}
+      tabIndex={canOpenLightbox ? 0 : undefined}
+      aria-label={canOpenLightbox ? `Open larger image: ${visual.alt || visual.label}` : undefined}
+      aria-haspopup={canOpenLightbox ? "dialog" : undefined}
       aria-hidden={imageAction ? true : undefined}
       ref={imageRef}
-      onClick={imageAction ? undefined : (event) => {
+      onClick={!canOpenLightbox ? undefined : (event) => {
         event.preventDefault();
         event.stopPropagation();
         event.currentTarget.focus({ preventScroll: true });
         setImageExpanded(true);
       }}
-      onKeyDown={imageAction ? undefined : (event) => {
+      onKeyDown={!canOpenLightbox ? undefined : (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           event.stopPropagation();
@@ -220,7 +222,7 @@ function MediaFrame({
   return (
     <figure className={`media-figure ${variant}`}>
       <div
-        className={`media-frame ${visual.src ? "has-image" : "is-placeholder"}`}
+        className={`media-frame ${visual.src ? "has-image" : "is-placeholder"}${imageInteractive ? "" : " is-static"}`}
         style={{ aspectRatio: visual.aspectRatio || "8 / 5" }}
       >
         {visual.src ? (
@@ -524,7 +526,6 @@ function TableOfContents({ entries }: { entries: ContentsEntry[] }) {
 
 function ProjectPreview({ project }: { project: Project }) {
   const [expanded, setExpanded] = useState(false);
-  const [investorDemoOpen, setInvestorDemoOpen] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
@@ -631,14 +632,9 @@ function ProjectPreview({ project }: { project: Project }) {
             </ExternalLink>
           )}
           {project.slug === "aldea-investor-portal" && (
-            <button
-              type="button"
-              className="text-link project-demo-link project-portal-demo-link project-toggle"
-              aria-haspopup="dialog"
-              onClick={() => setInvestorDemoOpen(true)}
-            >
-              Explore demo <Arrow diagonal />
-            </button>
+            <span className="media-status project-demo-link project-portal-demo-link">
+              Interactive demo temporarily unavailable
+            </span>
           )}
         </div>
       </div>
@@ -661,7 +657,7 @@ function ProjectPreview({ project }: { project: Project }) {
             </div>
             <div className="drilldown-body">
               <ProjectMetadata project={project} />
-              <CaseSections project={project} inline onOpenDemo={() => setInvestorDemoOpen(true)} />
+              <CaseSections project={project} inline />
               <button type="button" className={`text-link drilldown-close drilldown-close-bottom${["aldea-investor-portal", "aldea-investor-simulation"].includes(project.slug) ? " drilldown-close-bottom-tight" : ""}`} onClick={() => changeExpanded(false)}>
                 Close project <span aria-hidden="true">↑</span>
               </button>
@@ -669,7 +665,6 @@ function ProjectPreview({ project }: { project: Project }) {
           </div>
         </div>
       </div>
-      {investorDemoOpen && <InvestorPortalModal onClose={() => setInvestorDemoOpen(false)} />}
     </article>
   );
 }
@@ -868,10 +863,7 @@ function MediaActions({ project }: { project: Project }) {
   return <div className="media-actions">{demoModule}</div>;
 }
 
-function InvestorPortalOutcomeMedia({ project, onOpenDemo }: { project: Project; onOpenDemo?: () => void }) {
-  const [demoOpen, setDemoOpen] = useState(false);
-  const closeDemo = useCallback(() => setDemoOpen(false), []);
-  const openDemo = onOpenDemo ?? (() => setDemoOpen(true));
+function InvestorPortalOutcomeMedia({ project }: { project: Project }) {
   const demoVisual = project.media.demoPoster ?? project.preview;
   const walkthroughVisual = project.media.walkthroughPoster;
 
@@ -883,18 +875,12 @@ function InvestorPortalOutcomeMedia({ project, onOpenDemo }: { project: Project;
           variant="demo-poster"
           showCaption={false}
           showCorners={false}
-          imageAction={{ kind: "button", label: "Explore Demo", onClick: openDemo }}
+          imageInteractive={false}
         />
         <div>
-          <button
-            type="button"
-            className="text-link portal-demo-trigger"
-            aria-haspopup="dialog"
-            onClick={openDemo}
-          >
-            Explore Demo <Arrow />
-          </button>
-          <span className="walkthrough-caption">Aldea Investor Portal - Limited interactive demo</span>
+          <span className="media-status portal-demo-unavailable">
+            Interactive demo temporarily unavailable
+          </span>
         </div>
       </div>
 
@@ -926,7 +912,6 @@ function InvestorPortalOutcomeMedia({ project, onOpenDemo }: { project: Project;
         </div>
       </div>
 
-      {!onOpenDemo && demoOpen && <InvestorPortalModal onClose={closeDemo} />}
     </div>
   );
 }
@@ -1008,7 +993,7 @@ function renderSectionText(section: ProjectSection): ReactNode {
   return parts;
 }
 
-function CaseSections({ project, inline = false, onOpenDemo }: { project: Project; inline?: boolean; onOpenDemo?: () => void }) {
+function CaseSections({ project, inline = false }: { project: Project; inline?: boolean }) {
   const projectIndex = projects.indexOf(project);
   const pairMiddleSections = !["aldea-investor-portal", "aldea-helios"].includes(project.slug);
   const pairStart = projectIndex % 2 === 0 ? 2 : 1;
@@ -1029,7 +1014,7 @@ function CaseSections({ project, inline = false, onOpenDemo }: { project: Projec
     const isPortalOutcome =
       project.slug === "aldea-investor-portal" && section.id === "outcome";
     const visual = isPortalOutcome ? (
-      <InvestorPortalOutcomeMedia project={project} onOpenDemo={onOpenDemo} />
+      <InvestorPortalOutcomeMedia project={project} />
     ) : hasVisualPair ? (
       <div className="case-section-visual-pair">
         {visuals.map((item) => (
