@@ -3,16 +3,16 @@ import { test, expect, type Locator, type Page } from "@playwright/test";
 async function openDemo(page: Page) {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto("/work/aldea-investor-portal");
-  await page.locator(".portal-demo-trigger").click();
+  await page.goto("/tests/fixtures/investor-demo.html");
+  await page.getByRole("button", { name: "Preview synthetic demo", exact: true }).click();
   await expect(page.getByText("Key Performance Indicators", { exact: true })).toBeVisible();
   return errors;
 }
 
 async function openHolding(page: Page) {
-  await page.getByPlaceholder("Search fund, company, sector, or note").fill("Lovable");
-  await page.getByRole("button", { name: /^byFounders VC Fund II/ })
-    .getByText("byFounders VC Fund II", { exact: true }).click();
+  await page.getByPlaceholder("Search fund, company, sector, or note").fill("Fund A 1");
+  await page.getByRole("button", { name: /^Fund A / })
+    .getByText("Fund A", { exact: true }).click();
   await expect(page.getByText("Fund Identity", { exact: true })).toBeVisible();
 }
 

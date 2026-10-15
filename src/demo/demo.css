@@ -1,15 +1,20 @@
 /* CSS zoom sizes this block to its container; an inverse percentage width would overflow it. */
 .aldea-demo { isolation: isolate; position: relative; min-height: 100%; zoom: .85; padding: 10px 36px 30px; background: var(--portal-demo-background, #f4f1eb); color-scheme: light; font: 400 16px/1.5 'Onest', sans-serif; text-align: left; letter-spacing: normal; text-wrap: wrap; --font-reporting: 'Onest', sans-serif; }
 .aldea-demo :focus-visible { outline: 2px solid #d886ff; outline-offset: 3px; }
-.aldea-demo section { scroll-margin-top: 20px; }
-.aldea-demo .demo-section-rail { display: none; }
-/* Original report column: 1400px page minus 64px gutters and 128px navigation rail. */
-.aldea-demo > .relative.space-y-10 { max-width: 1208px; margin-inline: auto; padding-right: 0; }
+.aldea-demo section[id^="report-section-"] { scroll-margin-top: 20px; }
+.aldea-demo .demo-section-rail { display: block; right: 0; width: 164px; z-index: 20; }
+.aldea-demo .demo-section-rail button { width: 164px; }
+/* Preserve the 1208px report column, with a separate gutter for the section rail. */
+.aldea-demo > .relative.space-y-10 { max-width: 1384px; margin-inline: auto; padding-right: 176px; }
 .aldea-demo a { text-underline-offset: 2px; }
 .aldea-demo .stage-mix-chart { width: 240px; max-width: 100%; height: auto; }
 .aldea-demo .stage-mix-legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-width: 360px; gap: 8px; }
 @media(max-width: 640px) {
   .aldea-demo { zoom: 1; padding: 10px 14px 22px; }
+  .aldea-demo > .relative.space-y-10 { padding-right: 32px; }
+  .aldea-demo .demo-section-rail { width: 28px; }
+  .aldea-demo .demo-section-rail button { position: relative; width: 28px; }
+  .aldea-demo .demo-section-rail button > span:first-child:not(:last-child) { position: absolute; right: 34px; padding: 4px 8px; border-radius: 4px; background: var(--portal-demo-background, #f4f1eb); }
   .aldea-demo section > .relative { padding-right: 0; }
   .aldea-demo section { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; }
 }
@@ -24,3 +29,10 @@
 @media (prefers-reduced-motion: reduce) {
   .aldea-demo *, .aldea-demo *::before, .aldea-demo *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation-duration: 0s !important; }
 }
+
+.aldea-demo .scatter-tooltip { position: absolute; z-index: 30; pointer-events: none; width: max-content; max-width: min(340px, calc(100% - 16px)); padding: 10px 12px; border: 1px solid #3d0028; border-radius: 6px; background: #f4f1eb; color: #1c1c1c; font: 400 13px/1.5 'Onest', sans-serif; box-shadow: 0 4px 14px #00000012; overflow-wrap: anywhere; }
+.aldea-demo .scatter-tooltip strong { display: block; margin-bottom: 6px; font-weight: 600; }
+.aldea-demo .scatter-tooltip dl { margin: 0; }
+.aldea-demo .scatter-tooltip dl > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+.aldea-demo .scatter-tooltip dt, .aldea-demo .scatter-tooltip dd { margin: 0; }
+.aldea-demo .scatter-tooltip dd { text-align: right; font-variant-numeric: tabular-nums; }

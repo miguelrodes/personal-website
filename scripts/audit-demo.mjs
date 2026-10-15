@@ -7,6 +7,7 @@ import postcss from 'postcss';
 // Follow the entire application-owned demo graph, including dynamic imports.
 // Only explicitly enumerated browser UI packages may cross this boundary.
 const root = resolve('src/demo');
+assert(!existsSync(resolve(root, 'mock-data/qualitativePortfolioSnapshot.json')), 'Legacy qualitative portfolio snapshot must not be present');
 const allowed = new Set(['react', 'react-dom', 'lucide-react',
   '@radix-ui/react-checkbox', '@radix-ui/react-popover', '@radix-ui/react-scroll-area',
   '@radix-ui/react-select', '@radix-ui/react-tooltip', 'clsx', 'tailwind-merge',
@@ -61,10 +62,15 @@ const assetFiles = readdirSync('dist/assets').filter(name => /\.(js|css)$/.test(
 for (const file of assetFiles) {
   const source = readFileSync(resolve('dist/assets', file), 'utf8');
   assert(!/supabase\.(?:co|com)|api\.airtable\.com|api\.attio\.com|VITE_SUPABASE|SUPABASE_SERVICE_ROLE|loadPublishedReportPackage/.test(source), `Production endpoint/client in ${file}`);
+  assert(!/Preview synthetic demo|tests\/fixtures\/investor-demo/.test(source), `Local review harness shipped in ${file}`);
   assert(!/eyJ[A-Za-z0-9_-]{12,}\.eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{12,}/.test(source), `Credential-like token in ${file}`);
 }
 const entryHtml = readFileSync('dist/index.html', 'utf8');
 assert(!/InvestorPortalDemo|plotly|world-atlas|onest/.test(entryHtml), 'Heavy demo assets were preloaded');
+const builtScripts = assetFiles.filter(name => name.endsWith('.js')).map(name => readFileSync(resolve('dist/assets', name), 'utf8')).join('\n');
+assert(builtScripts.includes('Aldea Synthetic Fund') && builtScripts.includes('ALDEA_FULLY_SYNTHETIC_V1'), 'Synthetic public demo was not included in the production bundle');
+const demoSources = [...visited].filter(file => /\.tsx?$/.test(file)).map(file => readFileSync(file, 'utf8')).join('\n');
+assert(!/Aldea Tech Fund I/.test(demoSources), 'Original fund identity remains in the isolated demo source');
 console.log(`Audited ${visited.size} local modules/assets, ${assetFiles.length} built JS/CSS assets, and all generated CSS selectors.`);
 console.log(`External packages: ${[...packages].sort().join(', ')}`);
 console.log(`Local graph:\n${[...visited].map(file => relative(process.cwd(), file)).sort().join('\n')}`);

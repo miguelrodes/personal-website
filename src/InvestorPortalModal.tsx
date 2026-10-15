@@ -52,12 +52,12 @@ export default function InvestorPortalModal({ onClose }: { onClose: () => void }
     onCancel={e => {
       // Radix dismisses the topmost popover/select first. Native selects consume Escape.
       e.preventDefault();
-      if (!dialogRef.current?.querySelector('[data-radix-popper-content-wrapper] [data-state="open"], [role="listbox"], [role="tooltip"]')) onClose();
+      if (!dialogRef.current?.querySelector('[data-radix-popper-content-wrapper] [data-state="open"], [role="listbox"], [role="tooltip"]:not(.scatter-tooltip)')) onClose();
     }}>
     <div className="portal-demo-frame">
       <header className="portal-demo-header">
         <img className="portal-demo-logo" src="/images/aldea-logo.png" alt="Aldea" width="96" height="31" />
-        <span className="portal-demo-label"><span aria-hidden="true">-</span><span>Tech Fund I (Synthetic Data)</span></span>
+        <span className="portal-demo-label"><span aria-hidden="true">-</span><span>Aldea Synthetic Fund</span></span>
       </header>
       <div ref={scrollRef} className="portal-demo-scroll" tabIndex={-1} role="region" aria-label="Investor report">
         <div ref={setContainer} className="aldea-demo reporting-theme">

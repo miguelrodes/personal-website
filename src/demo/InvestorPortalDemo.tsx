@@ -3,7 +3,7 @@ import FundReportSections from "./components/fund-reporting/FundReportSections";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { PortalContainerContext } from "./PortalContainer";
 import { MOCK_PRIORITY_COMPANY_NAMES, MOCK_PRIORITY_FUND_NAMES,
-  getMockReportPackage, getMockReportPackagesByFundCode } from "./mock-data/investorPortal";
+  getMockReportPackage, getMockReportPackagesByFundCode, SYNTHETIC_FUND, MOCK_LATEST_QUARTER } from "./mock-data/investorPortal";
 import { validateMockPackage } from "./validateMockData";
 import "@fontsource/onest/400.css";
 import "@fontsource/onest/500.css";
@@ -16,7 +16,7 @@ export default function InvestorPortalDemo({ container, scrollContainerRef }: {
   container: HTMLElement;
   scrollContainerRef: RefObject<HTMLDivElement | null>;
 }) {
-  const report = getMockReportPackage("tech-fund-1", "2026-q2");
+  const report = getMockReportPackage(SYNTHETIC_FUND.slug, MOCK_LATEST_QUARTER);
   validateMockPackage(report);
   const dataSource = useMemo(() => {
     const historyPackages = getMockReportPackagesByFundCode(report.report_meta.fund_code);

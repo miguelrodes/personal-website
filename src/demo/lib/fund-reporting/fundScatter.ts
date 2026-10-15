@@ -36,6 +36,8 @@ export function normalizeAldeaFundCode(value: unknown): string | null {
     const trimmed = value.trim();
     if (!trimmed) return null;
 
+    if (trimmed === "SYNTHETIC" || trimmed === "Aldea Synthetic Fund") return "SYNTHETIC";
+
     const directMatch = /^F(\d+)$/i.exec(trimmed);
     if (directMatch) return `F${directMatch[1]}`;
 

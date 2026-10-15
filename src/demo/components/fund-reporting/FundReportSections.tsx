@@ -21,7 +21,7 @@ import { cn } from "@demo/lib/utils";
 import { normalizeWebsiteUrl } from "@demo/lib/websiteValidation";
 export const sectionLinks = [
     { id: "overview", label: "Overview" },
-    { id: "portfolio", label: "Portfolio" },
+    { id: "portfolio", label: "Portfolio Explorer" },
     { id: "exposure", label: "Exposure" }
 ] as const;
 const overviewMetricOrder = [
@@ -1289,7 +1289,10 @@ function CCMiniBarList({ title, items, secondary = false, barColor, titleClassNa
 }
 const STAGE_MIX_COLORS = ["#FF6A49", "#FFDE68", "#7BF5B3", "#3D0028"] as const;
 const STAGE_MIX_COLOR_BY_LABEL: Record<string, string> = {
-    "Series B": "#3D0028",
+    "Pre-Seed": "#FFDE68",
+    "Seed": "#FF6A49",
+    "Series A": "#7BF5B3",
+    "Series B": "#D886FF",
 };
 function CCStageDonut({ title, items, titleClassName, drilldown }: {
     title: string;
@@ -3855,7 +3858,7 @@ export default function FundReportSections({ reportPackage, onActiveSectionChang
     const rootRef = useRef<HTMLDivElement | null>(null);
     const visibleSectionLinks = useMemo(() => sectionLinks, []);
     const fundDisplayName = reportPackage.report_meta.fund_display_name?.trim() || "Selected fund";
-    const fundCodeLabel = reportPackage.report_meta.fund_code?.trim() || fundDisplayName;
+    const fundCodeLabel = fundDisplayName;
     const [activeSection, setActiveSection] = useState<SectionId>("overview");
     const [isRailHovered, setIsRailHovered] = useState(false);
     const [selectedIndustryKey, setSelectedIndustryKey] = useState("");
@@ -4448,11 +4451,11 @@ export default function FundReportSections({ reportPackage, onActiveSectionChang
 
       <div className={cn("pointer-events-none absolute top-44 bottom-0 -right-2 z-0 sm:-right-4 md:-right-6 xl:-right-10 2xl:-right-14", sectionRailClassName)}>
         <div className="pointer-events-auto sticky top-[calc(50vh-108px)] flex justify-end">
-          <div className="flex flex-col items-end gap-2.5" onMouseEnter={() => setIsRailHovered(true)} onMouseLeave={() => setIsRailHovered(false)}>
+          <nav aria-label="Reporting sections" className="flex flex-col items-end gap-2.5" onMouseEnter={() => setIsRailHovered(true)} onMouseLeave={() => setIsRailHovered(false)} onFocusCapture={() => setIsRailHovered(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsRailHovered(false); }}>
             {visibleSectionLinks.map((section) => {
             const isActive = activeSection === section.id;
             const showLabel = isRailHovered || isActive;
-            return (<button key={section.id} type="button" onClick={() => handleJumpToSection(section.id)} aria-current={isActive ? "true" : undefined} className="flex min-h-6 w-[148px] items-center justify-end gap-2.5 py-1 text-right">
+            return (<button key={section.id} type="button" onClick={() => handleJumpToSection(section.id)} aria-label={section.label} aria-current={isActive ? "true" : undefined} className="flex min-h-6 w-[148px] items-center justify-end gap-2.5 py-1 text-right">
                   {showLabel ? (<span className={cn("whitespace-nowrap text-sm transition-all duration-200", isActive ? "text-[#3D0028]" : "text-charcoal/48")}>
                       {section.label}
                     </span>) : null}
@@ -4461,7 +4464,7 @@ export default function FundReportSections({ reportPackage, onActiveSectionChang
                     : "h-[2px] w-4 bg-black/35")}/>
                 </button>);
         })}
-          </div>
+          </nav>
         </div>
       </div>
 

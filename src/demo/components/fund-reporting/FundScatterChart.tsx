@@ -10,7 +10,8 @@ import type { FundScatterPoint, ReportingUnderlyingCompany, } from "@demo/lib/fu
 import { cn } from "@demo/lib/utils";
 import { bindChartGestures } from "@demo/lib/chartGestures";
 import { getScatterYValueAtPointer, panScatterRange, scatterYRangesEqual, zoomScatterYRange } from "@demo/lib/fund-reporting/holdingScatterZoom";
-type Data = PlotlyData & { meta?: { interactive: string } };
+import { useScatterPointer, type ScatterTooltipData } from "./ScatterTooltip";
+type Data = PlotlyData & { meta?: { interactive: string; tooltip?: ScatterTooltipData } };
 type FundScatterChartMode = "main" | "compare";
 type FundScatterGrouping = "fund" | "vintage_year" | "company_vintage" | "sector" | "region";
 type FundScatterMomentum = "today" | "1y" | "2y";
@@ -96,8 +97,6 @@ const MANGO_SCATTER_DEFAULT_CENTER = { x: 2.5, y: 2 } as const;
 const MANGO_SCATTER_DEFAULT_X_AXIS_RANGE: AxisRange = [0, 8];
 const MANGO_SCATTER_DEFAULT_Y_AXIS_RANGE: AxisRange = [0, 7];
 const COMPANY_VINTAGE_DEFAULT_Y_AXIS_RANGE: AxisRange = [0.5, 2.2];
-const SCATTER_TOOLTIP_FONT_FAMILY = 'SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-const SCATTER_TOOLTIP_LABEL_WIDTH_CHARS = 22;
 const FUND_NAME_MATCH_STRICT_STOPWORDS = new Set([
     "and",
     "co",
@@ -158,12 +157,6 @@ function formatReportPeriodLabel(value: string | null | undefined) {
 }
 function formatMultipleLabel(value: number | null) {
     return value != null ? `${value.toFixed(2)}x` : "—";
-}
-function padScatterTooltipLabel(label: string, width: number) {
-    return `${"\u00A0".repeat(Math.max(width - label.length, 0))}${label}`;
-}
-function buildScatterTooltipRow(label: string, valueToken: string, isLast = false) {
-    return `${padScatterTooltipLabel(label, SCATTER_TOOLTIP_LABEL_WIDTH_CHARS)}\u00A0\u00A0${valueToken}${isLast ? "<extra></extra>" : "<br>"}`;
 }
 function normalizeVintageKey(vintage: number | null) {
     if (vintage == null || !Number.isFinite(vintage))
@@ -1104,20 +1097,13 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                             formatMultipleLabel(row.tvpi),
                             companyCountLabel
                         ]];
-                const hovertemplate = isCompanyVintageGrouping
-                    ? [
-                        "<b>%{text}</b><br>",
-                        buildScatterTooltipRow("Aldea exposure:", "%{customdata[0]}"),
-                        buildScatterTooltipRow("Avg linked fund TVPI:", "%{customdata[1]}"),
-                        buildScatterTooltipRow("Underlying companies:", "%{customdata[2]}", true)
-                    ].join("")
-                    : [
-                        "<b>%{text}</b><br>",
-                        buildScatterTooltipRow("Fair value:", "%{customdata[0]}"),
-                        buildScatterTooltipRow("Value created:", "%{customdata[1]}"),
-                        buildScatterTooltipRow("TVPI:", "%{customdata[2]}"),
-                        buildScatterTooltipRow("Companies:", "%{customdata[3]}", true)
-                    ].join("");
+                const tooltip: ScatterTooltipData = {
+                    pointKey: getScatterPointKey(row), title: row.name,
+                    rows: (isCompanyVintageGrouping
+                        ? ["Aldea exposure:", "Avg linked fund TVPI:", "Underlying companies:"]
+                        : ["Fair value:", "Value created:", "TVPI:", "Companies:"])
+                        .map((label, index) => [label, customdata[0][index]]),
+                };
                 const markerSize = isCompanyVintageGrouping
                     ? companyVintageExposure != null
                         ? companyVintageExposure
@@ -1130,7 +1116,7 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                     x: [row.age_years],
                     y: [row.tvpi],
                     ids: [pointKey],
-                    meta: { interactive: "bubble" },
+                    meta: { interactive: "bubble", tooltip },
                     text: [row.name],
                     textposition: "top center",
                     cliponaxis: false,
@@ -1138,7 +1124,7 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                         color: isDimmed ? hexToRgba(GRAPH_TEXT_COLOR, DIMMED_TEXT_ALPHA) : GRAPH_TEXT_COLOR,
                         size: 10,
                     },
-                    hovertemplate,
+                    hoverinfo: "skip",
                     customdata,
                     marker: {
                         size: [markerSize],
@@ -1213,26 +1199,20 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                         formatMultipleLabel(row.tvpi),
                         companyCountLabel
                     ]];
-            const hovertemplate = isCompanyVintageAverage
-                ? [
-                    "<b>%{text}</b><br>",
-                    buildScatterTooltipRow("Aldea exposure:", "%{customdata[0]}"),
-                    buildScatterTooltipRow("Avg linked fund TVPI:", "%{customdata[1]}"),
-                    buildScatterTooltipRow("Underlying companies:", "%{customdata[2]}", true)
-                ].join("")
-                : [
-                    "<b>%{text}</b><br>",
-                    buildScatterTooltipRow("Fair value:", "%{customdata[0]}"),
-                    buildScatterTooltipRow("Value created:", "%{customdata[1]}"),
-                    buildScatterTooltipRow("TVPI:", "%{customdata[2]}"),
-                    buildScatterTooltipRow("Companies:", "%{customdata[3]}", true)
-                ].join("");
+            const tooltip: ScatterTooltipData = {
+                    pointKey: getScatterPointKey(row), title: row.name,
+                    rows: (isCompanyVintageAverage
+                        ? ["Aldea exposure:", "Avg linked fund TVPI:", "Underlying companies:"]
+                        : ["Fair value:", "Value created:", "TVPI:", "Companies:"])
+                        .map((label, index) => [label, customdata[0][index]]),
+                };
             return {
                 type: "scatter",
                 mode: "text+markers",
                 x: [row.age_years],
                 y: [row.tvpi],
                 ids: [getScatterPointKey(row)],
+                meta: { interactive: "bubble", tooltip },
                 text: [row.name],
                 textposition: getCompareTextPosition(row),
                 cliponaxis: false,
@@ -1240,7 +1220,7 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                     color: GRAPH_TEXT_COLOR,
                     size: 10,
                 },
-                hovertemplate,
+                hoverinfo: "skip",
                 customdata,
                 marker: {
                     size: [isFiniteNumber(row.commitment_eur) && row.commitment_eur > 0 ? row.commitment_eur : 1],
@@ -1273,6 +1253,9 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
         mainBubbleSizeReference,
         mainBubbleSizeSelector
     ]);
+    const { pointerHandlers, tooltip } = useScatterPointer(plotRef, viewportFrameRef, plotData,
+        mode === "main" ? (pointKey) => setSelectedPointKeys(current => current.includes(pointKey)
+            ? current.filter(key => key !== pointKey) : [...current, pointKey]) : undefined);
     const plotLayout = useMemo<Partial<Layout>>(() => ({
         autosize: true,
         dragmode: false,
@@ -1280,11 +1263,6 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
         paper_bgcolor: "rgba(0,0,0,0)",
         plot_bgcolor: "rgba(0,0,0,0)",
         showlegend: false,
-        hoverlabel: {
-            bgcolor: "#F4F1EB",
-            bordercolor: "#000000",
-            font: { color: "#000000", size: 13, family: SCATTER_TOOLTIP_FONT_FAMILY },
-        },
         xaxis: {
             range: xAxisRange,
             tickmode: "array",
@@ -1366,40 +1344,6 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                 if (!mountedPlot.isConnected) plotly.purge(mountedPlot);
                 return;
             }
-            const plotNode = mountedPlot as HTMLDivElement & {
-                on?: (eventName: string, handler: (event: unknown) => void) => void;
-                removeAllListeners?: (eventName?: string) => void;
-            };
-            if (mode === "main") {
-                const handlePlotClick = (event: unknown) => {
-                    const clickedPoint = (event as {
-                        points?: Array<{
-                            id?: string;
-                            pointIndex?: number;
-                            data?: {
-                                ids?: string[];
-                                meta?: {
-                                    interactive?: string;
-                                };
-                            };
-                        }>;
-                    })?.points?.[0];
-                    if (clickedPoint?.data?.meta?.interactive !== "bubble") {
-                        return;
-                    }
-                    const clickedId = clickedPoint?.id ??
-                        (typeof clickedPoint?.pointIndex === "number"
-                            ? clickedPoint?.data?.ids?.[clickedPoint.pointIndex]
-                            : undefined);
-                    if (typeof clickedId === "string" && clickedId.length > 0) {
-                        setSelectedPointKeys((current) => current.includes(clickedId)
-                            ? current.filter((key) => key !== clickedId)
-                            : [...current, clickedId]);
-                    }
-                };
-                plotNode.removeAllListeners?.("plotly_click");
-                plotNode.on?.("plotly_click", handlePlotClick);
-            }
             const handleResize = () => {
                 if (mountedPlot) {
                     plotly?.Plots.resize(mountedPlot);
@@ -1423,10 +1367,6 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
             resizeObserver?.disconnect();
             cleanupWindowResize();
             if (mountedPlot && plotly) {
-                const plotNode = mountedPlot as HTMLDivElement & {
-                    removeAllListeners?: (eventName?: string) => void;
-                };
-                plotNode.removeAllListeners?.("plotly_click");
                 if (!mountedPlot.isConnected) plotly.purge(mountedPlot);
             }
         };
@@ -1564,11 +1504,12 @@ export default function FundScatterChart({ mode, initialReportPeriod, focusId, f
                 </div>))}
             </div>
             <div ref={viewportFrameRef} className={cn("relative min-h-0 min-w-0 overflow-hidden bg-white/10", false)} style={{ height: `${chartScrollViewportHeightPx}px` }}>
-              <div ref={viewportRef} data-testid={`fund-scatter-${mode}-viewport`} data-x-domain={xAxisRange.join(",")} data-y-domain={yAxisRange.join(",")} tabIndex={0} role="region" aria-label="Scrollable investment scatter chart" className="min-h-0 min-w-0 overflow-x-auto overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ height: `${chartScrollViewportHeightPx}px`, touchAction: "pan-x pan-y" }}>
+              <div ref={viewportRef} {...pointerHandlers} data-testid={`fund-scatter-${mode}-viewport`} data-x-domain={xAxisRange.join(",")} data-y-domain={yAxisRange.join(",")} tabIndex={0} role="region" aria-label="Scrollable investment scatter chart" className="min-h-0 min-w-0 overflow-x-auto overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ height: `${chartScrollViewportHeightPx}px`, touchAction: "pan-x pan-y" }}>
                 <div style={{ width: `${effectiveChartCanvasWidth}px`, height: `${effectiveChartCanvasHeightPx}px` }}>
                   <div ref={plotRef} className="h-full w-full"/>
                 </div>
               </div>
+              {tooltip}
             </div>
             <div className="border-r border-t border-[#3D0028]/10 bg-[#F4F1EB]/88"/>
             <div className="relative overflow-hidden border-t border-[#3D0028]/10 bg-[#F4F1EB]/88">

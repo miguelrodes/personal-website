@@ -1,59 +1,55 @@
-# Investor Portal portfolio demo
+# Investor Portal synthetic demo
 
-Open [the local portfolio](http://127.0.0.1:5173/), expand **Aldea Investor Portal**, and select **Explore Demo** near the project outcome. The poster image opens the same overlay. The same button is available on the existing project-detail page. The button opens an overlay without changing the current URL.
+The homepage **Explore Demo** link and the standalone Investor Portal page open the synthetic demo in a modal. The outcome poster is also clickable. The modal loads the isolated demo on demand; all names, narratives, and financial figures are fictional.
 
-To start it again, run `npm install` followed by `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort` from this repository. The predev/prebuild scripts generate the isolated reporting stylesheet.
+## Local review
 
-## Extraction and files
+Run `npm run dev -- --host 127.0.0.1 --port 5173 --strictPort`, then open:
 
-The source was read from `diaspora-bloom-simulation-preview-local` at `eaa5309b3048ce95bef49888efe341e4f8a7635b`. That repository was not modified.
+[Local synthetic demo preview](http://127.0.0.1:5173/tests/fixtures/investor-demo.html)
 
-- `src/App.tsx`: launch button and modal state in `MediaActions`.
-- `src/InvestorPortalModal.tsx` and `.css`: native modal dialog, persistent header, lazy boundary, scroll lock/restoration, keyboard focus and dismissal.
-- `src/demo/`: extracted `FundReportSections`, `FundScatterChart`, `PortfolioMap`, their UI primitives and utilities, the existing reporting mock generator and sanitized qualitative snapshot. Only Overview, Portfolio and Exposure render. The wrapper opens directly into the Fund I, 2026 Q2 report with a required mock-only provider; fund/quarter selectors and the section navigation are omitted.
-- `scripts/build-demo-styles.mjs`: builds and scopes Tailwind styles to `.aldea-demo`, retaining Aldea's 16px sizing and Onest typography. Small muted text is darkened for readability. Generated CSS is ignored and rebuilt automatically.
-- `scripts/audit-demo.mjs`: follows runtime imports, checks the dependency allowlist, rejects network/persistence clients and production endpoints, inspects built assets, and verifies stylesheet scope.
-- `package.json`, lockfile, `.gitignore`, `tsconfig.app.json`, and `vite.config.ts`: dependencies, scripts, the isolated import alias and build integration.
-- `tests/investor-demo.spec.ts`, `tests/investor-mock.spec.ts`: modal behavior, complete drill-downs, mock arithmetic, data failures and network isolation. `tests/drilldown.spec.ts` also recognizes the existing Investor Portal image-pair layout.
+Select **Preview synthetic demo**. This test fixture is a separate Vite development entry and is not an input to the production build. It permits reviewing the modal without navigating the portfolio. Escape or a click outside the desktop dialog dismisses the preview.
 
-Pre-existing edits to portfolio content, styles, images and tests were retained.
+## Entirely fictional data
 
-Runtime additions are Radix checkbox/popover/scroll-area/select/tooltip, `lucide-react`, `clsx`, `tailwind-merge`, `@fontsource/onest`, `react-simple-maps`, `world-atlas`, and the smaller `plotly.js-basic-dist-min` scatter build. Build additions are Tailwind's CLI, Tailwind, its animation plugin, PostCSS and chart/map typings. Unused original UI and Markdown dependencies were removed.
+The header and all reports use **Aldea Synthetic Fund**, with code `SYNTHETIC` and slug `synthetic-fund`. There are five invested funds:
 
-The modal header contains the original Aldea wordmark and a ghost Close button. The wordmark is copied unchanged from `src/assets/aldea-logo.png` in the source checkout to `public/images/aldea-logo.png`; the source app uses this transparent PNG and does not provide an SVG version of the wordmark. Header, scroll area and content share the report overview’s `#F4F1EB` background.
+| Holding | Companies | Names |
+| --- | ---: | --- |
+| Fund A | 32 | Fund A 1–Fund A 32 |
+| Fund B | 34 | Fund B 1–Fund B 34 |
+| Fund C | 31 | Fund C 1–Fund C 31 |
+| Fund D | 35 | Fund D 1–Fund D 35 |
+| Fund E | 33 | Fund E 1–Fund E 33 |
 
-## Isolation and included behavior
+All 165 identities, investment relationships, managers, strategies, business descriptions, operating updates, and financial figures are invented. The previous qualitative snapshot has been deleted, not renamed or sampled. No original record IDs, company domains, LinkedIn URLs, logos, biographies, or former names are used. Actual country/city labels exist only to demonstrate geography; assignment of those places to fictional entities is invented. Sectors, industries, locations, stages, and statuses vary across the example portfolio.
 
-The seed remains `ALDEA_PUBLIC_DEMO_2026`. All ten supported fund/quarter reports and their histories are generated locally from the existing sanitized qualitative snapshot. Real permitted names, descriptions, fund-company relationships and logo filename metadata remain; quantitative values come from the deterministic generator. byFounders and Lovable retain the source mock priority behavior.
+- `src/demo/mock-data/syntheticPortfolio.ts`: the explicitly invented qualitative catalogue and fund specifications.
+- `src/demo/mock-data/investorPortal.ts`: deterministic financial scenarios using seed `ALDEA_FULLY_SYNTHETIC_V1`.
+- `src/demo/validateMockData.ts`: rejects unknown identities, missing entities, external identity metadata, invalid numbers, or broken financial reconciliations.
+- `src/demo/InvestorPortalDemo.tsx`: opens the latest synthetic report (2026 Q2) and supplies its local history to the reporting UI.
 
-The runtime provider supports only `kind: "mock"` and has no default live fallback. Snapshot schema checks run before generation. Report validation rejects empty/invalid packages, non-mock package IDs, source documents and non-finite values. Loading/rendering failures show **Demo temporarily unavailable.** No production client, report loader, environment configuration, authentication or persisted data is imported. There are no external requests from the demo: map geometry, fonts and code are all local. Company website identities are displayed without outbound navigation; logos are not remotely fetched.
+## Financial model
 
-Included interactions cover full KPIs and Quarter movement, fund and company tables/profiles, both scatter levels, trajectories, search, sector/location filters, sorting, geography/industry/stage exploration, map regions and country drill-downs. The original company scatter wheel-pan, trackpad-pinch and two-touch-pinch handlers are retained. Escape dismisses nested controls first; dropdowns are constrained to the modal's scroll area. Closing unmounts charts, observers and listeners and restores page focus/scroll. Reopening starts at Fund I, 2026 Q2.
+Six quarter-end reports run from 2025 Q1 through 2026 Q2. A generated 2024 Q4 opening position supplies the first NAV bridge. Synthetic company investment dates precede the reports and follow each invented fund's first close; founding years precede investment.
 
-Intentionally excluded: Portfolio Highlights, Financials, Fund Info and later sections; Simulation; administration/view switching; auth; upload/edit/review/publish workflows; save/print/download controls; Helios/app navigation and all backend access.
+Company investment cost, valuations, staged follow-on calls, partial cash realizations, full exits, and write-offs are generated once from the fixed seed. A terminal exit or write-off stops further investment. Exited and written-off positions have zero residual value and ownership; written-off positions have no proceeds. Active companies can appreciate or decline. Revenue, post-money values, stages, and operating commentary follow each company's simulated state.
 
-## Original extraction verification
+Company amounts are attributed look-through exposures in EUR. They sum exactly into each fund's investment cost, residual value, and distributions, then into the wrapper's KPIs and strategy total. Geography and industry exposure buckets use these same company rows. TVPI = DPI + RVPI; company MOIC uses residual value plus realized cash divided by invested cost. IRR solves the dated synthetic contribution/distribution ledger with terminal NAV. Historical chart endpoints use the same quarterly report values.
 
-These results describe the initial integration before the later header and selector simplification. The demo UI tests now reflect the fixed report entry view.
+The model deliberately excludes separate wrapper fees, carried interest, debt, and other assets. Those bridge rows are zero and gross/net returns therefore coincide. This simplifying assumption is described in report notes; it does not represent actual Aldea economics. Post-money USD figures use an illustrative constant EUR/USD rate of 1.10. ARR is an invented scenario estimate, not an observation.
 
-- `npm run build`: passed, including TypeScript project checking and the production Vite build.
-- `npm run demo:audit`: passed for 24 local runtime modules/assets, six built JS/CSS assets, and all generated CSS selectors. The qualitative snapshot and scatter gesture utility match their approved source files byte for byte.
-- `npm run lint`: exit 0, no errors; 42 React/Hook warnings remain in the extracted map/report/chart components. They include state synchronization in effects, render-time refs and dependency recommendations. They were not suppressed.
-- Final `npm test -- --workers=2`: **51 passed, 6 failed, 1 skipped**. All 28 new demo/data checks passed, as did all ten project expand/collapse checks. The skipped check is the existing desktop-only contents navigation test on mobile.
-- The six failures are existing contrast checks on `/`, `/contact`, and `/work/aldea-investor-portal`, each on desktop and mobile. The same three page failures reproduce on desktop in a temporary copy with the new modal import, launch UI and state removed. Examples include pale social/footer links and animated content/navigation during the scan. The surrounding site's appearance was preserved.
-- Demo-specific checks passed for lazy loading; same URL/window; exactly three reporting sections; complete quarter movements; byFounders/Lovable detail; trajectories, wheel pan and both pinch paths; search/filter/sort; both funds and supported quarters; exposure/map drill-downs; chart resize and reopen; close/Escape/nested controls; focus/inactive background; scroll restoration; narrow layouts; and unchanged surrounding computed styles after closing.
-- Fresh unauthenticated browser contexts recorded zero external HTTP requests through the tested demo paths. Missing and invalid mock modules both showed the required unavailable message. Axe found no WCAG 2 A/AA or 2.1 AA violations in the exercised modal exposure state. This is a targeted automated check, not a full accessibility certification.
+## UI and isolation
 
-The demo and Plotly remain separate lazy chunks (approximately 409KB and 359KB gzipped); Vite reports the expected large-chunk warning. The initial portfolio JavaScript is approximately 84KB gzipped. Physical mobile hardware and Safari-specific gestures have not been tested; mobile checks use Chromium with iPhone-sized/touch emulation and synthetic pinch events. No commit, push or deployment was performed.
+The extracted reporting components retain Overview, Portfolio Explorer, and Exposure, including fund/company details, searches, filters, maps, and scatter trajectories. Fund, company, and map views all receive the same new records. Shared zoom and pan behavior is retained. The header uses the local Aldea wordmark with the synthetic fund title.
 
-## Header simplification verification
+The provider supports only `kind: "mock"`, with no live fallback. The demo imports no production client, authentication, environment credentials, external data loader, or persistence service. Fonts and map geometry are local. There are no external company links or remote logos. Public entry points load only this synthetic dataset. The production build excludes the local review fixture and its launch button.
 
-After replacing the header with the local Aldea wordmark and ghost Close button and removing fund/quarter selection and section navigation: `npm run build`, `npm run demo:audit`, and all 10 `tests/investor-demo.spec.ts` desktop/mobile checks passed. `npm run lint` completed with zero errors and the existing extracted-component warnings. Browser checks verify the removed controls, matching header/content background colors, logo, borderless close control, opening/closing, focus and scroll restoration, fund/company exploration, exposure controls, and missing/invalid data handling.
+## Checks
 
-## Shared chart navigation
+- `npm run build`: TypeScript and production build.
+- `npm run demo:audit`: source dependency boundary, local-only data access, scoped styles, absence of the legacy snapshot, and exclusion of the local review fixture from built assets.
+- `npx playwright test tests/investor-mock.spec.ts --project=laptop`: fictional identities/counts, cash-flow and NAV reconciliation, IRR, timeline/status consistency, exposure buckets, chart history, and rejection of substituted data.
+- `npx playwright test tests/investor-demo.spec.ts tests/investor-chart-navigation.spec.ts`: desktop/mobile public and local launches, synthetic fund/company details, maps, chart navigation, local requests, and invalid/missing-data behavior.
 
-The fund-of-funds, fund-comparison, and underlying-company MOIC scatters share `src/demo/lib/chartGestures.ts`. Ordinary wheel or trackpad scrolling pans the data axes. Trackpad pinch/Ctrl-wheel, two-touch pinch, and Safari gesture events zoom the Y range around the pointer using the underlying-company scatter's sensitivity and acceleration. The canvas fits its frame, and axis ticks update with the visible domain. Reset view and double-click restore the initial ranges.
-
-Both geographic exposure maps use the same input handler through `MapNavigation.tsx`. Pinch zoom anchors the geography beneath the pointer, accounting for SVG letterboxing and the modal's CSS scale. Ordinary scrolling pans the map, and zoom remains bounded between 1.8 and 6. Country filters, region presets, mouse dragging, and one-finger map dragging remain available. Reset view restores world navigation while preserving the selected country.
-
-Verification: production build and demo audit passed for 26 local modules/assets; lint completed with zero errors and the existing extracted-component warnings. Six new desktop/mobile navigation checks cover panning, pointer anchoring, shared pinch speed, domain/zoom limits, reset, country filters, and mouse dragging. Four existing chart/exposure integration checks passed, including trajectories, fund/company exploration, filters, and the modal exposure accessibility scan. Mobile uses Chromium touch emulation; Safari gesture events are exercised synthetically in Chromium, rather than on Safari hardware.
+Existing portfolio screenshot assets, descriptive case-study content, and walkthrough media are outside this interactive data replacement and have not been rewritten. The public launch points are enabled only for this fictional dataset.

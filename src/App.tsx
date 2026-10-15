@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { profile, projects } from "./content";
 import type { Project, ProjectSection, Visual } from "./content";
 import "./App.css";
+
+const InvestorPortalModal = lazy(() => import("./InvestorPortalModal"));
 
 function Arrow({ diagonal = false }: { diagonal?: boolean }) {
   return (
@@ -524,7 +527,7 @@ function TableOfContents({ entries }: { entries: ContentsEntry[] }) {
   );
 }
 
-function ProjectPreview({ project }: { project: Project }) {
+function ProjectPreview({ project, onOpenDemo }: { project: Project; onOpenDemo: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const detailsRef = useRef<HTMLDivElement>(null);
@@ -632,9 +635,10 @@ function ProjectPreview({ project }: { project: Project }) {
             </ExternalLink>
           )}
           {project.slug === "aldea-investor-portal" && (
-            <span className="media-status project-demo-link project-portal-demo-link">
-              Interactive demo temporarily unavailable
-            </span>
+            <button type="button" className="text-link project-demo-link project-portal-demo-link project-toggle"
+              aria-haspopup="dialog" onClick={onOpenDemo}>
+              Explore Demo <Arrow diagonal />
+            </button>
           )}
         </div>
       </div>
@@ -657,7 +661,7 @@ function ProjectPreview({ project }: { project: Project }) {
             </div>
             <div className="drilldown-body">
               <ProjectMetadata project={project} />
-              <CaseSections project={project} inline />
+              <CaseSections project={project} inline onOpenDemo={onOpenDemo} />
               <button type="button" className={`text-link drilldown-close drilldown-close-bottom${["aldea-investor-portal", "aldea-investor-simulation"].includes(project.slug) ? " drilldown-close-bottom-tight" : ""}`} onClick={() => changeExpanded(false)}>
                 Close project <span aria-hidden="true">↑</span>
               </button>
@@ -669,7 +673,7 @@ function ProjectPreview({ project }: { project: Project }) {
   );
 }
 
-function HomePage() {
+function HomePage({ onOpenDemo }: { onOpenDemo: () => void }) {
   const [firstName, ...familyNames] = profile.name.split(" ");
   const [emailCopied, setEmailCopied] = useState(false);
   const copyTimer = useRef<number | null>(null);
@@ -808,7 +812,7 @@ function HomePage() {
             {projects
               .filter((project) => project.group === group)
               .map((project) => (
-                <ProjectPreview key={project.slug} project={project} />
+                <ProjectPreview key={project.slug} project={project} onOpenDemo={onOpenDemo} />
               ))}
           </div>
         ))}
@@ -863,7 +867,7 @@ function MediaActions({ project }: { project: Project }) {
   return <div className="media-actions">{demoModule}</div>;
 }
 
-function InvestorPortalOutcomeMedia({ project }: { project: Project }) {
+function InvestorPortalOutcomeMedia({ project, onOpenDemo }: { project: Project; onOpenDemo: () => void }) {
   const demoVisual = project.media.demoPoster ?? project.preview;
   const walkthroughVisual = project.media.walkthroughPoster;
 
@@ -875,12 +879,12 @@ function InvestorPortalOutcomeMedia({ project }: { project: Project }) {
           variant="demo-poster"
           showCaption={false}
           showCorners={false}
-          imageInteractive={false}
+          imageAction={{ kind: "button", label: "Explore Demo", onClick: onOpenDemo }}
         />
         <div>
-          <span className="media-status portal-demo-unavailable">
-            Interactive demo temporarily unavailable
-          </span>
+          <button type="button" className="text-link portal-demo-trigger" aria-haspopup="dialog" onClick={onOpenDemo}>
+            Explore Demo <Arrow diagonal />
+          </button>
         </div>
       </div>
 
@@ -993,7 +997,7 @@ function renderSectionText(section: ProjectSection): ReactNode {
   return parts;
 }
 
-function CaseSections({ project, inline = false }: { project: Project; inline?: boolean }) {
+function CaseSections({ project, inline = false, onOpenDemo }: { project: Project; inline?: boolean; onOpenDemo: () => void }) {
   const projectIndex = projects.indexOf(project);
   const pairMiddleSections = !["aldea-investor-portal", "aldea-helios"].includes(project.slug);
   const pairStart = projectIndex % 2 === 0 ? 2 : 1;
@@ -1014,7 +1018,7 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
     const isPortalOutcome =
       project.slug === "aldea-investor-portal" && section.id === "outcome";
     const visual = isPortalOutcome ? (
-      <InvestorPortalOutcomeMedia project={project} />
+      <InvestorPortalOutcomeMedia project={project} onOpenDemo={onOpenDemo} />
     ) : hasVisualPair ? (
       <div className="case-section-visual-pair">
         {visuals.map((item) => (
@@ -1080,7 +1084,7 @@ function CaseSections({ project, inline = false }: { project: Project; inline?: 
   );
 }
 
-function ProjectPage({ project }: { project: Project }) {
+function ProjectPage({ project, onOpenDemo }: { project: Project; onOpenDemo: () => void }) {
   const nextProject =
     projects[(projects.indexOf(project) + 1) % projects.length];
   return (
@@ -1095,7 +1099,7 @@ function ProjectPage({ project }: { project: Project }) {
         <h1>{project.title}</h1>
         <ProjectMetadata project={project} />
       </header>
-      <CaseSections project={project} />
+        <CaseSections project={project} onOpenDemo={onOpenDemo} />
       <nav className="case-bottom-nav" aria-label="More projects">
         <a href="/#work" className="text-link">
           <span aria-hidden="true">←</span> All selected work
@@ -1187,6 +1191,8 @@ function NotFound() {
 }
 
 export default function App() {
+  const [investorDemoOpen, setInvestorDemoOpen] = useState(false);
+  const openInvestorDemo = useCallback(() => setInvestorDemoOpen(true), []);
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const project = projects.find((item) => path === `/work/${item.slug}`);
   const isHome = path === "/";
@@ -1253,16 +1259,19 @@ export default function App() {
       {(isHome || project) && <TableOfContents entries={contents} />}
       <main className="shell" id="main">
         {isHome ? (
-          <HomePage />
+          <HomePage onOpenDemo={openInvestorDemo} />
         ) : isContact ? (
           <ContactPage />
         ) : project ? (
-          <ProjectPage project={project} />
+          <ProjectPage project={project} onOpenDemo={openInvestorDemo} />
         ) : (
           <NotFound />
         )}
       </main>
       <Footer isHome={isHome} />
+      {investorDemoOpen && <Suspense fallback={<p className="portal-demo-status portal-demo-loading" role="status">Loading Animation…</p>}>
+        <InvestorPortalModal onClose={() => setInvestorDemoOpen(false)} />
+      </Suspense>}
     </>
   );
 }

@@ -1,227 +1,184 @@
 import { test, expect } from "@playwright/test";
-import qualitativeSnapshotJson from "../src/demo/mock-data/qualitativePortfolioSnapshot.json" with { type: "json" };
-import { MOCK_DATA_SEED, MOCK_LOVABLE_TARGET_MOIC, MOCK_REPORTING_MANIFEST,
+import { existsSync } from "node:fs";
+import { MOCK_DATA_SEED, MOCK_REPORTING_MANIFEST, MOCK_REPORT_PACKAGES, MOCK_CASH_FLOWS_BY_QUARTER,
   getMockReportPackage, getMockReportPackagesByFundCode } from "../src/demo/mock-data/investorPortal";
+import { SYNTHETIC_FUND, SYNTHETIC_HOLDINGS } from "../src/demo/mock-data/syntheticPortfolio";
 import { validateMockPackage } from "../src/demo/validateMockData";
+import { buildLocalPreviewFundScatterHistoryRows } from "../src/demo/lib/fund-reporting/fundScatter";
+import type { ReportingPackage } from "../src/demo/lib/fund-reporting/types";
 
-// Financial reconciliation and permitted-identity tests preserved from the source mock implementation.
-function numericMetric(reportPackage: NonNullable<ReturnType<typeof getMockReportPackage>>, key: string) {
-  const value = reportPackage.key_metrics.find((metric) => metric.metric_key === key)?.value;
-  if (typeof value !== "number") throw new Error(`Missing numeric metric ${key}`);
-  return value;
-}
+const metric = (report: ReportingPackage, key: string) => Number(report.key_metrics.find(m => m.metric_key === key)?.value);
+const sum = (values: number[]) => values.reduce((a, b) => a + b, 0);
 
-function allMockPackages() {
-  const fundCodes = [...new Set(MOCK_REPORTING_MANIFEST.reports.map((report) => report.fund_code))];
-  return fundCodes.flatMap(getMockReportPackagesByFundCode);
-}
-
-test.describe("isolated investor portal mock data", () => {
-  test("uses the existing deterministic public mock seed", () => {
-    expect(MOCK_DATA_SEED).toBe("ALDEA_PUBLIC_DEMO_2026");
-    expect(allMockPackages()).toHaveLength(10);
-    allMockPackages().forEach(validateMockPackage);
-  });
-
-  test("preserves the real qualitative portfolio identities in the sanitized mock layer", () => {
-    const packages = allMockPackages();
-
-    expect(packages.length).toBeGreaterThan(2);
-    expect(new Set(packages.map((reportPackage) => reportPackage.report_meta.fund_display_name))).toEqual(
-      new Set(["Aldea Tech Fund I", "Aldea Tech Fund II"]),
-    );
-    for (const reportPackage of packages) {
-      expect(reportPackage.overview.manager).toMatch(/Aldea/i);
-      expect(reportPackage.underlying_companies?.length).toBeGreaterThan(0);
-      expect(reportPackage.report_meta.source_documents).toEqual([]);
-    }
-  });
-
-  test("pins byFounders and Lovable while retaining their qualitative relationship and logo", () => {
-    const byFoundersPackages = allMockPackages().filter((reportPackage) =>
-      reportPackage.portfolio_holdings.some((holding) => /byfounders/i.test(holding.asset_name)),
-    );
-
-    expect(byFoundersPackages.length).toBeGreaterThan(0);
-    for (const reportPackage of byFoundersPackages) {
-      expect(reportPackage.portfolio_holdings[0]?.asset_name).toMatch(/byfounders/i);
-
-      const byFoundersCompanies = (reportPackage.underlying_companies ?? []).filter(
-        (company) => company.linked_portfolio_holding_asset_code === "BYFOUNDERS_VC_FUND_II",
-      );
-      if (byFoundersCompanies.length === 0) continue;
-
-      expect(reportPackage.underlying_companies?.[0]?.company_name).toBe("Lovable");
-      expect(byFoundersCompanies[0]?.company_name).toBe("Lovable");
-      expect(byFoundersCompanies[0]?.linked_fund_name).toBe("ByFounders VC Fund II K/S");
-      expect(byFoundersCompanies[0]?.logo_attachment_filename).toBe("lovable_dev_logo.jpg");
-      expect(byFoundersCompanies[0]?.description_short).toMatch(/GPT-powered interface/i);
-    }
-  });
-
-  test("marks Lovable near 100x in the latest mock quarter without changing the byFounders fund total", () => {
-    const latestPackages = [...new Set(MOCK_REPORTING_MANIFEST.reports.map((report) => report.fund_code))]
-      .map((fundCode) => getMockReportPackagesByFundCode(fundCode)[0]!)
-      .filter((reportPackage) =>
-        reportPackage.underlying_companies?.some((company) => company.company_name === "Lovable"),
-      );
-
-    expect(latestPackages.length).toBeGreaterThan(0);
-    for (const reportPackage of latestPackages) {
-      const lovable = reportPackage.underlying_companies?.find((company) => company.company_name === "Lovable");
-      const byFounders = reportPackage.portfolio_holdings.find(
-        (holding) => holding.asset_code === "BYFOUNDERS_VC_FUND_II",
-      );
-
-      expect(lovable?.moic).toBeCloseTo(MOCK_LOVABLE_TARGET_MOIC, 2);
-      expect(byFounders?.tvpi).toBeCloseTo(4.2, 3);
-    }
-  });
-
-  test("reconciles NAV, distributions, TVPI, DPI, and RVPI from the underlying mock positions", () => {
-    const packages = allMockPackages();
-
-    for (const reportPackage of packages) {
-      const paidIn = reportPackage.portfolio_holdings.reduce(
-        (total, holding) => total + holding.net_invested_eur,
-        0,
-      );
-      const nav = reportPackage.portfolio_holdings.reduce(
-        (total, holding) => total + holding.fair_value_eur,
-        0,
-      );
-      const distributions = reportPackage.portfolio_holdings.reduce(
-        (total, holding) => total + holding.dpi * holding.net_invested_eur,
-        0,
-      );
-      const expectedDpi = distributions / paidIn;
-      const expectedRvpi = nav / paidIn;
-      const expectedTvpi = expectedDpi + expectedRvpi;
-
-      expect(numericMetric(reportPackage, "net_asset_value")).toBe(nav);
-      expect(numericMetric(reportPackage, "cumulative_paid_in_capital")).toBe(paidIn);
-      expect(numericMetric(reportPackage, "cumulative_distributions_to_fund")).toBe(distributions);
-      expect(numericMetric(reportPackage, "dpi_to_investors")).toBeCloseTo(expectedDpi, 10);
-      expect(numericMetric(reportPackage, "rvpi_to_investors")).toBeCloseTo(expectedRvpi, 10);
-      expect(numericMetric(reportPackage, "tvpi_to_investors")).toBeCloseTo(expectedTvpi, 10);
-
-      for (const holding of reportPackage.portfolio_holdings) {
-        const companies = (reportPackage.underlying_companies ?? []).filter(
-          (company) => company.linked_portfolio_holding_asset_code === holding.asset_code,
-        );
-        if (companies.length === 0) continue;
-        expect(companies.reduce((total, company) => total + (company.invested_eur ?? 0), 0)).toBe(holding.net_invested_eur);
-        expect(companies.reduce((total, company) => total + (company.fair_value_eur ?? 0), 0)).toBe(holding.fair_value_eur);
-        expect(companies.reduce((total, company) => total + (company.realized_cash_eur ?? 0), 0)).toBeCloseTo(holding.dpi * holding.net_invested_eur, 8);
-      }
-      for (const company of reportPackage.underlying_companies ?? []) {
-        expect(company.first_investment_date).not.toBeNull();
-        expect(company.first_investment_date! <= reportPackage.report_meta.quarter_end_date).toBe(true);
-        if (!(company.invested_eur && company.invested_eur > 0)) continue;
-        const aggregateMoic = ((company.fair_value_eur ?? 0) + (company.realized_cash_eur ?? 0) + (company.proceeds_stock_eur ?? 0)) / company.invested_eur;
-        expect(company.moic).toBeCloseTo(aggregateMoic, 10);
-      }
-    }
-  });
-
-  test("matches the original Quarter movement structure and reconciles every mock NAV bridge", () => {
-    const expectedRows = [
-      ["residual_value_start_of_quarter", "Residual Value - start of quarter"],
-      ["paid_in_capital", "Paid in Capital (+)"],
-      ["unrealized_gains_losses", "Unrealized gains / (losses) (+/-)"],
-      ["investment_income", "Investment income (+)"],
-      ["management_fees", "Management Fees (-)"],
-      ["other_income_expense", "Other Income / (Expense) (+/-)"],
-      ["distributions", "Distributions (-)"],
-      ["carry_allocation", "Carry Allocation (-)"],
-      ["residual_value_end_of_quarter", "Residual Value - end of quarter"],
-      ["check_vs_residual_value_current", "Check vs Residual value (current)"],
-    ];
-    const fundCodes = [...new Set(MOCK_REPORTING_MANIFEST.reports.map((report) => report.fund_code))];
-
-    for (const fundCode of fundCodes) {
-      const chronologicalPackages = [...getMockReportPackagesByFundCode(fundCode)].reverse();
-
-      chronologicalPackages.forEach((reportPackage, packageIndex) => {
-        const bridge = reportPackage.financial_sections.find((section) => section.section_key === "nav_bridge");
-        expect(bridge).toMatchObject({
-          title: "NAV / Residual Value bridge",
-          statement_type: "nav_bridge",
-        });
-        expect(bridge!.rows.map((row) => [row.row_key, row.label])).toEqual(expectedRows);
-
-        const amounts = new Map(
-          bridge!.rows.map((row) => [row.row_key, row.values.amount as number]),
-        );
-        const opening = amounts.get("residual_value_start_of_quarter")!;
-        const closing = amounts.get("residual_value_end_of_quarter")!;
-        const movements = bridge!.rows
-          .slice(1, -2)
-          .reduce((total, row) => total + (row.values.amount as number), 0);
-
-        expect(opening + movements).toBe(closing);
-        expect(closing).toBe(numericMetric(reportPackage, "net_asset_value"));
-        expect(amounts.get("paid_in_capital")).toBeGreaterThanOrEqual(0);
-        expect(amounts.get("investment_income")).toBeGreaterThanOrEqual(0);
-        expect(amounts.get("management_fees")).toBeLessThanOrEqual(0);
-        expect(amounts.get("distributions")).toBeLessThanOrEqual(0);
-        expect(amounts.get("carry_allocation")).toBeLessThanOrEqual(0);
-
-        if (packageIndex > 0) {
-          const previousBridge = chronologicalPackages[packageIndex - 1]!.financial_sections.find(
-            (section) => section.section_key === "nav_bridge",
-          )!;
-          const previousClosing = previousBridge.rows.find(
-            (row) => row.row_key === "residual_value_end_of_quarter",
-          )!.values.amount;
-          expect(opening).toBe(previousClosing);
-        }
-      });
-    }
-  });
-
-  test("keeps history endpoints, quarter comparisons, and reload reads consistent", () => {
-    const fundCodes = [...new Set(MOCK_REPORTING_MANIFEST.reports.map((report) => report.fund_code))];
-    for (const fundCode of fundCodes) {
-      const descendingHistory = getMockReportPackagesByFundCode(fundCode);
-      const latest = descendingHistory[0]!;
-      expect(getMockReportPackage(latest.report_meta.fund_slug, latest.report_meta.quarter_slug)).toEqual(latest);
-      for (let index = 0; index < descendingHistory.length - 1; index += 1) {
-        const current = descendingHistory[index]!;
-        const previous = descendingHistory[index + 1]!;
-        for (const metric of current.key_metrics) {
-          const previousValue = previous.key_metrics.find((candidate) => candidate.metric_key === metric.metric_key)?.value;
-          if (typeof previousValue === "number") expect(metric.comparison_value).toBe(previousValue);
-        }
-      }
-      const chartEndpoint = [...descendingHistory].reverse().at(-1)!;
-      expect(numericMetric(chartEndpoint, "tvpi_to_investors")).toBe(numericMetric(latest, "tvpi_to_investors"));
-      expect(numericMetric(chartEndpoint, "net_asset_value")).toBe(numericMetric(latest, "net_asset_value"));
-    }
-  });
-
-  test("contains no embedded financial or operating quantities in qualitative snapshot strings", () => {
-    const allowedStructuralFields = new Set(["asset_code", "asset_name", "company_id", "company_name", "former_name", "fund_code", "fund_display_name", "fund_slug", "fund_scope_labels", "linked_fund_name", "linked_fund_record_id", "linked_portfolio_holding_asset_code", "linked_portfolio_holding_asset_name", "linkedin", "logo_attachment_filename", "portfolio_fund_labels_current", "schema_version", "vc_firm", "website"]);
-    const forbiddenPatterns = [/[€$£]\s*\d/i, /\d(?:[\d.,]*)\s*%/, /\b\d+(?:\.\d+)?\s*(?:x|k|m|mn|b|bn|million|billion)\b/i, /\b(?:arr|mrr|revenue|valuation|fund size|funding|fundraise|raised|runway|burn|gmv|aum|paid[- ]?in|nav|distributions?|proceeds|cash|customers?|employees?)\b[^.!?\n]{0,50}\d|\d[^.!?\n]{0,50}\b(?:arr|mrr|revenue|valuation|fund size|funding|fundraise|raised|runway|burn|gmv|aum|paid[- ]?in|nav|distributions?|proceeds|cash|customers?|employees?)\b/i];
-    const suspicious: Array<{ path: string; value: string }> = [];
-    function scan(value: unknown, path: string[] = []) {
-      if (Array.isArray(value)) { value.forEach((item) => scan(item, [...path, "[]"])); return; }
-      if (value && typeof value === "object") { Object.entries(value).forEach(([key, item]) => scan(item, [...path, key])); return; }
-      if (typeof value !== "string" || allowedStructuralFields.has(path.at(-1) ?? "")) return;
-      if (forbiddenPatterns.some((pattern) => pattern.test(value))) suspicious.push({ path: path.join("."), value });
-    }
-    scan(qualitativeSnapshotJson);
-    expect(suspicious).toEqual([]);
-  });
-
+test("only the new synthetic fund and six deterministic quarterly reports are available", () => {
+  expect(MOCK_DATA_SEED).toBe("ALDEA_FULLY_SYNTHETIC_V1");
+  expect(MOCK_REPORT_PACKAGES).toHaveLength(6);
+  expect(MOCK_REPORTING_MANIFEST.reports).toHaveLength(6);
+  expect(getMockReportPackage("synthetic-fund")).toEqual(MOCK_REPORT_PACKAGES.at(-1));
+  expect(getMockReportPackage("unknown-fund")).toBeNull();
+  expect(getMockReportPackage("synthetic-fund", "2030-q1")).toBeNull();
+  expect(getMockReportPackagesByFundCode("SYNTHETIC")).toEqual([...MOCK_REPORT_PACKAGES].reverse());
+  expect(existsSync("src/demo/mock-data/qualitativePortfolioSnapshot.json")).toBe(false);
+  for (const report of MOCK_REPORT_PACKAGES) {
+    validateMockPackage(report);
+    expect(report.report_meta).toMatchObject({ fund_display_name: "Aldea Synthetic Fund", fund_code: "SYNTHETIC", source_documents: [] });
+    expect(getMockReportPackage(SYNTHETIC_FUND.slug, report.report_meta.quarter_slug)).toEqual(report);
+  }
 });
 
-test("rejects absent, empty, non-mock, and non-finite reporting data", () => {
-  const original = getMockReportPackage("tech-fund-1", "2026-q2")!;
-  for (const invalid of [null, {}, {...original, package_id: "production"},
-    {...original, underlying_companies: []},
-    {...original, report_meta: {...original.report_meta, source_documents: ["private.pdf"]}},
-    {...original, key_metrics: [{metric_key: "net_asset_value", value: NaN}]}]) {
-    expect(() => validateMockPackage(invalid)).toThrow("Demo temporarily unavailable.");
+test("five invented funds contain 165 distinct companies with no real identity metadata", () => {
+  for (const report of MOCK_REPORT_PACKAGES) {
+    expect(report.portfolio_holdings.map(h => h.asset_name)).toEqual(["Fund A", "Fund B", "Fund C", "Fund D", "Fund E"]);
+    expect(report.underlying_companies).toHaveLength(165);
+    expect(new Set(report.underlying_companies!.map(c => c.company_id)).size).toBe(165);
+    for (const spec of SYNTHETIC_HOLDINGS) {
+      const holding = report.portfolio_holdings.find(h => h.asset_name === `Fund ${spec.letter}`)!;
+      const rows = report.underlying_companies!.filter(c => c.linked_portfolio_holding_asset_code === holding.asset_code);
+      expect(rows).toHaveLength(spec.companyCount);
+      expect(holding.deal_count).toBe(rows.length);
+      expect(rows.map(c => c.company_name)).toEqual(Array.from({length: spec.companyCount}, (_, i) => `Fund ${spec.letter} ${i + 1}`));
+      for (const company of rows) {
+        expect(company.linked_fund_name).toBe(holding.asset_name);
+        expect(company.fund_scope_labels).toEqual(["Aldea Synthetic Fund"]);
+        expect(company.portfolio_fund_labels_current).toEqual([holding.asset_name]);
+        expect(company.description_short).toContain("fictional");
+        expect(company.description_long).toContain("do not describe a real company");
+        expect(company.update_narrative).toContain("All information is invented");
+        expect([company.website, company.linkedin, company.logo_attachment_filename, company.former_name, company.name_woman]).toEqual([null, null, null, null, null]);
+        expect(company.year_founded).toBeLessThanOrEqual(Number(company.first_investment_date!.slice(0, 4)));
+        expect(company.first_investment_date! >= holding.first_closing_date!).toBe(true);
+        expect(company.first_investment_date! <= report.report_meta.quarter_end_date).toBe(true);
+      }
+    }
   }
+});
+
+test("company values, holdings, strategy totals, KPIs, and every exposure bucket reconcile", () => {
+  for (const report of MOCK_REPORT_PACKAGES) {
+    const allCompanies = report.underlying_companies!;
+    const nav = sum(allCompanies.map(c => c.fair_value_eur!));
+    const paidIn = sum(allCompanies.map(c => c.invested_eur!));
+    const cash = sum(allCompanies.map(c => c.realized_cash_eur!));
+    expect(metric(report, "net_asset_value")).toBe(nav);
+    expect(metric(report, "cumulative_paid_in_capital")).toBe(paidIn);
+    expect(metric(report, "cumulative_distributions_to_fund")).toBe(cash);
+    expect(metric(report, "tvpi_to_investors")).toBeCloseTo((nav + cash) / paidIn, 10);
+    expect(metric(report, "tvpi_to_investors")).toBeCloseTo(metric(report, "dpi_to_investors") + metric(report, "rvpi_to_investors"), 10);
+    expect(report.strategy_summary).toHaveLength(1);
+    expect(report.strategy_summary[0]).toMatchObject({ fair_value_eur: nav, net_invested_eur: paidIn });
+    for (const holding of report.portfolio_holdings) {
+      const companies = allCompanies.filter(c => c.linked_portfolio_holding_asset_code === holding.asset_code);
+      expect(holding.net_invested_eur).toBe(sum(companies.map(c => c.invested_eur!)));
+      expect(holding.fair_value_eur).toBe(sum(companies.map(c => c.fair_value_eur!)));
+      expect(holding.dpi * holding.net_invested_eur).toBeCloseTo(sum(companies.map(c => c.realized_cash_eur!)), 6);
+      expect(holding.tvpi).toBeCloseTo(holding.dpi + holding.rvpi, 10);
+      expect(holding.called_pct).toBeGreaterThan(0);
+      expect(holding.called_pct).toBeLessThanOrEqual(1);
+    }
+    for (const [field, buckets] of [["country", report.geography_breakdown], ["industry", report.industry_breakdown]] as const) {
+      expect(sum(buckets.map(b => b.exposure_eur))).toBe(nav);
+      expect(sum(buckets.map(b => b.company_count))).toBe(165);
+      for (const bucket of buckets) {
+        const companies = allCompanies.filter(c => c[field] === bucket.label);
+        expect(bucket.company_count).toBe(companies.length);
+        expect(bucket.exposure_eur).toBe(sum(companies.map(c => c.fair_value_eur!)));
+      }
+    }
+    expect(report.above_cost_metric!.at_or_above_1x_moic_count).toBe(allCompanies.filter(c => c.moic! >= 1).length);
+    expect(report.current_unicorn_count).toBe(allCompanies.filter(c => c.post_money_eur_current! >= 1e9).length);
+  }
+});
+
+test("exits and write-offs have zero residual value and stay closed in later quarters", () => {
+  const latest = MOCK_REPORT_PACKAGES.at(-1)!;
+  const statuses = new Set(latest.underlying_companies!.map(c => c.current_status));
+  expect(statuses).toEqual(new Set(["ACTIVE", "EXITED", "EXIT - WRITE OFF"]));
+  expect(latest.underlying_companies!.some(c => c.current_status === "ACTIVE" && c.moic! < 1)).toBe(true);
+  expect(latest.underlying_companies!.some(c => c.current_status === "ACTIVE" && c.moic! > 5)).toBe(true);
+  expect(new Set(latest.underlying_companies!.filter(c => c.current_status === "ACTIVE").map(c => c.company_stage_current)).size).toBe(4);
+  for (const [index, report] of MOCK_REPORT_PACKAGES.entries()) {
+    for (const company of report.underlying_companies!) {
+      expect(company.moic).toBeCloseTo((company.fair_value_eur! + company.realized_cash_eur!) / company.invested_eur!, 10);
+      if (company.current_status!.startsWith("EXIT")) {
+        expect(company.fair_value_eur).toBe(0);
+        expect(company.ownership).toBe(0);
+        expect(company.post_money_eur_current).toBeNull();
+      }
+      if (company.current_status!.includes("WRITE")) {
+        expect(company.realized_cash_eur).toBe(0);
+        expect(company.moic).toBe(0);
+      }
+      if (index > 0) {
+        const prior = MOCK_REPORT_PACKAGES[index - 1]!.underlying_companies!.find(c => c.company_id === company.company_id)!;
+        expect(company.invested_eur!).toBeGreaterThanOrEqual(prior.invested_eur!);
+        expect(company.realized_cash_eur!).toBeGreaterThanOrEqual(prior.realized_cash_eur!);
+        expect(company.first_investment_date).toBe(prior.first_investment_date);
+        if (prior.current_status!.startsWith("EXIT")) {
+          expect(company.current_status).toBe(prior.current_status);
+          expect(company.invested_eur).toBe(prior.invested_eur);
+          expect(company.realized_cash_eur).toBe(prior.realized_cash_eur);
+        }
+      }
+    }
+  }
+});
+
+test("quarterly bridges, cash flows, comparisons and IRR reconcile across history", () => {
+  for (const [index, report] of MOCK_REPORT_PACKAGES.entries()) {
+    const bridge = report.financial_sections.find(s => s.section_key === "nav_bridge")!;
+    const amounts = new Map(bridge.rows.map(r => [r.row_key, Number(r.values.amount)]));
+    expect(bridge.rows).toHaveLength(10);
+    expect(sum(bridge.rows.slice(0, -2).map(r => Number(r.values.amount)))).toBe(metric(report, "net_asset_value"));
+    expect(amounts.get("residual_value_end_of_quarter")).toBe(metric(report, "net_asset_value"));
+    if (index > 0) {
+      const prior = MOCK_REPORT_PACKAGES[index - 1]!;
+      expect(amounts.get("residual_value_start_of_quarter")).toBe(metric(prior, "net_asset_value"));
+      expect(amounts.get("paid_in_capital")).toBe(metric(report, "cumulative_paid_in_capital") - metric(prior, "cumulative_paid_in_capital"));
+      expect(amounts.get("distributions")).toBe(-(metric(report, "cumulative_distributions_to_fund") - metric(prior, "cumulative_distributions_to_fund")));
+      for (const m of report.key_metrics) expect(m.comparison_value).toBe(metric(prior, m.metric_key));
+    }
+    const cashFlows = MOCK_CASH_FLOWS_BY_QUARTER.get(report.report_meta.quarter_key)!;
+    expect(sum(cashFlows.map(f => f.amount))).toBe(metric(report, "cumulative_distributions_to_fund") - metric(report, "cumulative_paid_in_capital"));
+    const allFlows = [...cashFlows, { date: report.report_meta.quarter_end_date, amount: metric(report, "net_asset_value") }];
+    const start = Math.min(...allFlows.map(f => Date.parse(f.date)));
+    const irr = metric(report, "net_irr");
+    const npv = sum(allFlows.map(f => f.amount / (1 + irr) ** ((Date.parse(f.date) - start) / 31_557_600_000)));
+    expect(Math.abs(npv)).toBeLessThan(0.01);
+    expect(metric(report, "gross_irr")).toBe(irr);
+  }
+});
+
+test("scatter histories contain only the five funds with correct quarterly endpoints", () => {
+  const latest = MOCK_REPORT_PACKAGES.at(-1)!;
+  const scatter = buildLocalPreviewFundScatterHistoryRows(MOCK_REPORT_PACKAGES, { throughReportPeriod: latest.report_meta.quarter_key });
+  expect(scatter).toHaveLength(30);
+  for (const report of MOCK_REPORT_PACKAGES) {
+    const rows = scatter.filter(r => r.report_period === report.report_meta.quarter_key);
+    expect(rows).toHaveLength(5);
+    for (const holding of report.portfolio_holdings) {
+      const row = rows.find(r => r.name === holding.asset_name)!;
+      expect(row.aldea_fund).toBe("SYNTHETIC");
+      expect(row.tvpi).toBeCloseTo(holding.tvpi, 5);
+      expect(row.company_count).toBe(holding.deal_count);
+    }
+  }
+});
+
+test("rejects missing, substituted, identifiable, inconsistent, and non-finite data", () => {
+  const original = MOCK_REPORT_PACKAGES.at(-1)!;
+  for (const mutation of [
+    (p: ReportingPackage) => { p.package_id = "production"; },
+    (p: ReportingPackage) => { p.report_meta.fund_display_name = "Unapproved fund"; },
+    (p: ReportingPackage) => { p.underlying_companies = []; },
+    (p: ReportingPackage) => { p.underlying_companies![0]!.company_name = "Unapproved company"; },
+    (p: ReportingPackage) => { p.underlying_companies![0]!.website = "https://example.com"; },
+    (p: ReportingPackage) => { p.underlying_companies![0]!.invested_eur! += 1; },
+    (p: ReportingPackage) => { p.key_metrics[0]!.value = NaN; },
+    (p: ReportingPackage) => { p.report_meta.source_documents = [{} as never]; },
+  ]) {
+    const altered = structuredClone(original);
+    mutation(altered);
+    expect(() => validateMockPackage(altered)).toThrow("Demo temporarily unavailable.");
+  }
+  for (const value of [null, {}]) expect(() => validateMockPackage(value)).toThrow("Demo temporarily unavailable.");
 });
