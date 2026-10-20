@@ -255,6 +255,7 @@
 .project-copy > p { max-width: 49ch; font-size: 16px; line-height: 1.8; }
 .project-period { display: block; margin-top: 16px; font-size: 11px; color: var(--muted); }
 .text-link { display: inline-flex; align-items: center; gap: 17px; width: fit-content; min-height: 44px; font-size: 14px; font-weight: 500; text-decoration: none; color: var(--accent, var(--burgundy)); }
+.text-link:is(button) { padding: 0; border: 0; background: transparent; font-family: inherit; text-align: left; cursor: pointer; }
 .text-link svg { transition: transform calc(180ms * var(--portfolio-motion-scale)) ease; }
 .text-link:hover { text-decoration: underline; }
 .text-link:hover svg { transform: translateX(3px); }

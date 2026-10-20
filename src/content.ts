@@ -99,7 +99,7 @@ export const projects: Project[] = [
       src: "/images/aldea-investor-portal.png",
       alt: "Aldea Investor Portal showing a company performance scatter plot and investment details using mock data",
       label: "Fund overview",
-      caption: "Investor Portal - Portfolio Explorer",
+      caption: "Investor Portal - Portfolio Explorer (Synthetic Data)",
       aspectRatio: "2514 / 1660",
     },
     sections: [
@@ -118,11 +118,11 @@ export const projects: Project[] = [
           "28 portfolio funds",
         ],
         visual: {
-          src: "/images/aldea-investor-portal-overview.png",
-          alt: "Aldea Investor Portal overview for Aldea Tech Fund I showing quarterly KPIs, fund NAV, and quarter movement",
-          label: "Fund overview",
-          caption: "Aldea Tech Fund I - Quarterly overview",
-          aspectRatio: "2362 / 1662",
+          src: "/images/aldea-investor-portal-intro.png",
+          alt: "Aldea Investor Portal introduction",
+          label: "Investor portal introduction",
+          caption: "Aldea Tech Fund I - Overview (synthetic data)",
+          aspectRatio: "2494 / 1614",
         },
       },
       {
