@@ -58,7 +58,7 @@ The four project routes are:
 - `/work/aldea-helios`
 - `/work/kuspace`
 
-Vite’s development and preview servers provide a single-page-app fallback for direct requests, including the `/contact` page. For the production build, `vite.config.ts` also writes `dist/work/<slug>/index.html` for every project, with its own title and description, plus `dist/404.html`. A future production host must provide an SPA fallback for `/contact` or generate a matching directory index.
+Vite’s development and preview servers provide a single-page-app fallback for direct requests. For the production build, `vite.config.ts` also writes `dist/work/<slug>/index.html` for every project, with its own title and description, plus `dist/404.html`. A future production host should provide an SPA fallback for project routes or serve their generated directory indexes.
 
 No host-specific deployment configuration or deploy script is checked into this repository. For static hosting, serve the contents of `dist/` at the domain root with directory-index serving enabled. This lets direct project links and refreshes resolve to their generated HTML files. If the host does not support directory indexes, configure `/work/*` requests to fall back to `/index.html`, and configure the host’s not-found handling for `404.html`.
 

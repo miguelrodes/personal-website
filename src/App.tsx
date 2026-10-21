@@ -51,7 +51,22 @@ function ExternalLink({
   );
 }
 
-function Header({ isHome, isContact }: { isHome: boolean; isContact: boolean }) {
+function Header({ isHome }: { isHome: boolean }) {
+  const [emailCopied, setEmailCopied] = useState(false);
+  const copyTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (copyTimer.current !== null) window.clearTimeout(copyTimer.current);
+  }, []);
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(profile.email);
+      setEmailCopied(true);
+      if (copyTimer.current !== null) window.clearTimeout(copyTimer.current);
+      copyTimer.current = window.setTimeout(() => setEmailCopied(false), 2500);
+    } catch {
+      setEmailCopied(false);
+    }
+  };
   return (
     <header className="site-header shell">
       <a className="wordmark" href="/" aria-label="Miguel Rodés Knuth — home">
@@ -59,11 +74,14 @@ function Header({ isHome, isContact }: { isHome: boolean; isContact: boolean }) 
       </a>
       <nav aria-label="Main navigation">
         <a href={isHome ? "#work" : "/#work"}>Portfolio</a>
-        <a href="/contact" aria-current={isContact ? "page" : undefined}>Contact</a>
+        <button className="header-contact" type="button" onClick={copyEmail}>
+          Contact
+        </button>
         <a href={profile.resumeUrl} download={profile.resumeFilename}>
           Resume<span className="sr-only"> (PDF download)</span>
         </a>
       </nav>
+      {emailCopied && <span className="header-copy-feedback" role="status">Email copied</span>}
     </header>
   );
 }
@@ -1115,66 +1133,6 @@ function ProjectPage({ project, onOpenDemo }: { project: Project; onOpenDemo: ()
   );
 }
 
-function ContactPage() {
-  return (
-    <section className="connect-page" aria-labelledby="connect-title">
-      <div className="connect-layout">
-        <div className="connect-main">
-          <p className="eyebrow connect-kicker">Contact</p>
-          <h1 id="connect-title">Let’s connect</h1>
-          <p className="connect-intro">
-            I’d love to hear about opportunities in product management, design,
-            and engineering, or ideas at the intersection of AI and Web3.
-          </p>
-          <a className="connect-email" href={`mailto:${profile.email}`}>
-            <span className="eyebrow">Say hello</span>
-            <span>{profile.email}<Arrow diagonal /></span>
-          </a>
-          <div className="connect-socials">
-            <ExternalLink href={profile.linkedin} className="connect-social">
-              <span>
-                <span className="eyebrow">LinkedIn</span>
-                <span className="connect-link-title">Professional background</span>
-              </span>
-            </ExternalLink>
-            <ExternalLink href={profile.github} className="connect-social">
-              <span>
-                <span className="eyebrow">GitHub</span>
-                <span className="connect-link-title">Code & projects</span>
-              </span>
-            </ExternalLink>
-          </div>
-          <a className="text-link connect-portfolio" href="/#work">
-            Explore my portfolio <Arrow />
-          </a>
-        </div>
-        <aside className="connect-details" aria-label="Availability and background">
-          <p className="eyebrow">Availability</p>
-          <p className="connect-availability">{profile.availability}</p>
-          <dl>
-            <div>
-              <dt className="eyebrow">Based in</dt>
-              <dd>{profile.location}</dd>
-            </div>
-            <div>
-              <dt className="eyebrow">Focus</dt>
-              <dd>Product management, design & engineering</dd>
-            </div>
-            <div>
-              <dt className="eyebrow">Education</dt>
-              <dd>Computer Science & Philosophy<br />Northeastern University</dd>
-            </div>
-          </dl>
-          <a className="text-link" href={profile.resumeUrl} download={profile.resumeFilename}>
-            Download résumé <span aria-hidden="true">↓</span>
-            <span className="sr-only"> (PDF)</span>
-          </a>
-        </aside>
-      </div>
-    </section>
-  );
-}
-
 function NotFound() {
   return (
     <section className="not-found">
@@ -1196,7 +1154,6 @@ export default function App() {
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const project = projects.find((item) => path === `/work/${item.slug}`);
   const isHome = path === "/";
-  const isContact = path === "/contact";
   useLayoutEffect(() => {
     const root = document.documentElement;
     if (project) {
@@ -1228,16 +1185,12 @@ export default function App() {
       ? `${project.title} — ${profile.name}`
       : isHome
         ? `${profile.name} — Product Design & Full-Stack Development`
-        : isContact
-          ? `Contact — ${profile.name}`
-          : `Page not found — ${profile.name}`;
+        : `Page not found — ${profile.name}`;
     document
       .querySelector('meta[name="description"]')
       ?.setAttribute(
         "content",
-        isContact
-          ? `Connect with ${profile.name} about product management, design, and engineering opportunities. Availability: ${profile.availability}.`
-          : project?.summary ?? profile.bio,
+        project?.summary ?? profile.bio,
       );
     if (window.location.hash)
       requestAnimationFrame(() =>
@@ -1249,19 +1202,17 @@ export default function App() {
       requestAnimationFrame(() =>
         window.scrollTo({ top: 0, left: 0, behavior: "instant" }),
       );
-  }, [project, isHome, isContact]);
+  }, [project, isHome]);
   return (
     <>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <Header isHome={isHome} isContact={isContact} />
+      <Header isHome={isHome} />
       {(isHome || project) && <TableOfContents entries={contents} />}
       <main className="shell" id="main">
         {isHome ? (
           <HomePage onOpenDemo={openInvestorDemo} />
-        ) : isContact ? (
-          <ContactPage />
         ) : project ? (
           <ProjectPage project={project} onOpenDemo={openInvestorDemo} />
         ) : (
